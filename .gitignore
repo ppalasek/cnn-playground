@@ -1,5 +1,5 @@
-*.~
+*~
 ~.pyc
 .idea/
-.tmp/
-trained_models/
+tmp/
+data/
