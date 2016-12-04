@@ -211,7 +211,7 @@ def get_cifar100():
 
 def check_svhn():
     """
-     
+
     """
     output_dir = './data/svhn/'
     output_files = {'train_32x32.mat': False,
