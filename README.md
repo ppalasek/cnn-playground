@@ -4,9 +4,9 @@ A framework for training/testing a Convolutional Neural Network (CNN) using Thea
 
 ###Prerequisites
 
- -- Theano (Prefer the [bleeding-edge version](http://deeplearning.net/software/theano/install.html#bleeding-edge-install-instructions))
- -- Lasagne (Prefer the [bleeding-edge version](http://lasagne.readthedocs.io/en/latest/user/installation.html#bleeding-edge-version))
- -- Install the latest CUDA Toolkit and possibly the corresponding driver available from NVIDIA: https://developer.nvidia.com/cuda-downloads
+ - Theano (Prefer the [bleeding-edge version](http://deeplearning.net/software/theano/install.html#bleeding-edge-install-instructions))
+ - Lasagne (Prefer the [bleeding-edge version](http://lasagne.readthedocs.io/en/latest/user/installation.html#bleeding-edge-version))
+ - Install the latest CUDA Toolkit and possibly the corresponding driver available from NVIDIA: https://developer.nvidia.com/cuda-downloads
 
 To configure Theano to *use the GPU by default*, create a file `.theanorc` directly in your home directory, with the following contents:
 ~~~
