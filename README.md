@@ -1,24 +1,25 @@
 #cnn-playground
 
-A Convolutional Neural Network (CNN) playground using Theano/Lasagne.
+A framework for training/testing a Convolutional Neural Network (CNN) using Theano/Lasagne.
 
-This framework supports the following datasets:
+This framework supports the following **datasets**:
 
 - CIFAR-10 (see https://www.cs.toronto.edu/~kriz/cifar.html)
 - CIFAR-100 (see https://www.cs.toronto.edu/~kriz/cifar.html)
 - MNIST (see http://yann.lecun.com/exdb/mnist/)
 - SVHN (see http://ufldl.stanford.edu/housenumbers/)
 
-and a number of basic architectures for training and evaluating a CNN. More specifically, the following architecture are available:
+and a set of basic **architectures** for training and evaluating a CNN. More specifically, the following architectures are available:
 
-~~~
-	 'CCFF':
-~~~
+
+ - `'CCFFF'`: A simple architecture consisting of 2 convolution and 3 fully-connected layers (see `build_ccfff_model()` in `cnn_models.py` for more details)
+ - *More to be added.*
+
 
 
 ## Step 1: Get the datasets
 
-First, you need to populate the `data/` directory as follows:
+First, you need to populate the `./data/` directory as follows:
 
 
 		./data/
@@ -44,25 +45,29 @@ First, you need to populate the `data/` directory as follows:
 		    ├── test_32x32.mat
 		    └── train_32x32.mat
 
-To this end, you need to run the `get_data.py` script and select which dataset(s) you want to download. If you already have the datasets, just copy them in the appropriate directories/subdirectories, as shown above and skip running `get_data.py`.
+To this end, you need to run the `get_data.py` script and select which dataset(s) you want to download. If you already have the datasets (in the above form), just copy them in the appropriate directories/subdirectories, as shown above and skip running `get_data.py`.
 
 
-## Step 2: Train a CNN
 
-For training a CNN, you need to run the `trainCNN.py` script. It's usage is shown below:
+## Step 2: Train and evaluate a CNN
+
+For training/evaluating a CNN, you need to run the `runCNN.py` script. It's usage is shown below (also, you may run `python runCNN.py -h` for detailed ):
 
 ~~~
-runCNN.py <arguments>
+runCNN.py [-h][-v][-d <DATASET>][-a <ARCHITECTURE>][-e NUM_EPOCHS][-b BATCH_SIZE][-l <LOSS>][-s]
 ~~~
 
-where
-
-* `A`
-* `B`
-
-
-
-
-
+Arguments:
+~~~
+	-h, --help : show help message
+	-v, --verbose : increase output verbosity
+	-d, --dataset : choose dataset from {'mnist', 'cifar10', 'cifar100', 'svhn'} (default: 'cifar10')
+	-a, --architecture : choose architecture from {'ccfff'} (default: 'ccfff')
+	-e, --num_epochs : set number of epochs
+	-b, --batch_size : set batch size
+	-l, --loss : choose loss function
+	-s, --save_model : save model file
+~~~
+(Also, you may run `python runCNN.py -h`)
 
 
