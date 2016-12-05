@@ -12,7 +12,7 @@ This framework supports the following **datasets**:
 and a set of basic **architectures** for training and evaluating a CNN. More specifically, the following architectures are available:
 
 
- - `'CCFFF'`: A simple architecture consisting of 2 convolution and 3 fully-connected layers (see `build_ccfff_model()` in `cnn_models.py` for more details)
+ - **`'ccfff'`**: A simple architecture consisting of 2 convolution and 3 fully-connected layers (see `build_ccfff_model()` in `cnn_models.py` for more details)
  - *More to be added.*
 
 
@@ -53,10 +53,10 @@ To this end, you need to run the `get_data.py` script and select which dataset(s
 
 For training/evaluating a CNN, you need to run the `runCNN.py` script. It's usage is shown below (also, you may run `python runCNN.py -h` for detailed ):
 
+Usage:
 ~~~
 runCNN.py [-h][-v][-d <DATASET>][-a <ARCHITECTURE>][-e NUM_EPOCHS][-b BATCH_SIZE][-l <LOSS>][-s]
 ~~~
-
 Arguments:
 ~~~
 	-h, --help : show help message
@@ -68,6 +68,3 @@ Arguments:
 	-l, --loss : choose loss function
 	-s, --save_model : save model file
 ~~~
-(Also, you may run `python runCNN.py -h`)
-
-
