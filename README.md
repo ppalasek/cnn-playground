@@ -2,6 +2,24 @@
 
 A framework for training/testing a Convolutional Neural Network (CNN) using Theano/Lasagne.
 
+###Prerequisites
+
+ -- Theano (Prefer the [bleeding-edge version](http://deeplearning.net/software/theano/install.html#bleeding-edge-install-instructions))
+ -- Lasagne (Prefer the [bleeding-edge version](http://lasagne.readthedocs.io/en/latest/user/installation.html#bleeding-edge-version))
+ -- Install the latest CUDA Toolkit and possibly the corresponding driver available from NVIDIA: https://developer.nvidia.com/cuda-downloads
+
+To configure Theano to *use the GPU by default*, create a file `.theanorc` directly in your home directory, with the following contents:
+~~~
+[global]
+floatX = float32
+device = gpu
+~~~
+
+Optionally add `allow_gc = False` for some extra performance at the expense of (sometimes substantially) higher GPU memory usage.
+
+
+###Description
+
 This framework supports the following **datasets**:
 
 - CIFAR-10 (see https://www.cs.toronto.edu/~kriz/cifar.html)
@@ -17,7 +35,7 @@ and a set of basic **architectures** for training and evaluating a CNN. More spe
 
 
 
-## Step 1: Get the datasets
+#### Step 1: Get the datasets
 
 First, you need to populate the `./data/` directory as follows:
 
@@ -49,7 +67,7 @@ To this end, you need to run the `get_data.py` script and select which dataset(s
 
 
 
-## Step 2: Train and evaluate a CNN
+#### Step 2: Train and evaluate a CNN
 
 For training/evaluating a CNN, you need to run the `runCNN.py` script. It's usage is shown below (also, you may run `python runCNN.py -h` for detailed ):
 
