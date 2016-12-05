@@ -258,6 +258,10 @@ def main():
     """
 
     """
+    # Create './data' dir, if does not exist
+    if not os.path.exists("./data"):
+        os.makedirs("./data")
+
     datasets = {1: 'MNIST',
                 2: 'CIFAR-10',
                 3: 'CIFAR-100',
