@@ -7,14 +7,13 @@ import numpy as np
 import theano
 import theano.tensor as T
 import lasagne
-from aux import iterate_minibatches, create_trained_models_dir
+from aux import iterate_minibatches
 from read_data import load_cifar10
 from cnn_models import build_ccfff_model
 
 
 def main():
     """
-    ################################################################################
     runCNN: A framework for training a Convolutional Neural Network (CNN) on one of
     the following datasets:
         - MNIST
@@ -23,18 +22,21 @@ def main():
         - SVHN
     based on one of the following architectures:
         - 'ccfff' : A simple architecture consisting of 2 convolution and 3 fully-
-                    connected layers (see build_ccfff_model() in cnn_models.py)
+                    connected layers (see `build_ccfff_model()` in `cnn_models.py`)
         - To be added more architectures (like ResNet, WRN, VGG)
 
-
     Run `runCNN.py -h` for more details on command line arguments.
+    ---------
+    Example:
 
-    Example: If you want to
+        python runCNN.py -d 'cifar10' -a 'ccfff' -e 100 -b 256 -l 'hinge' -s
 
+        Train/evaluate a CNN with the 'ccfff' architecture on CIFAR-10. The number of
+        epochs and the batch size are equal to 100 and 256, respectively, while the
+        multi-class hinge loss will be used as an objective function. The trained
+        model will be saved at
+                `./trained_models/cifar10_ccfff_100_256_hinge_model.npz`.
 
-
-
-    ################################################################################
     """
     # Set up a parser for command line arguments
     parser = argparse.ArgumentParser()
