@@ -43,7 +43,7 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
     parser.add_argument("-d", "--dataset", type=str, choices=['mnist', 'cifar10', 'cifar100', 'svhn'], default='cifar10', help="choose dataset")
     parser.add_argument("-a", "--architecture", type=str, choices=['ccfff'], default="ccfff", help="choose CNN architecture")
-    parser.add_argument("-e", "--num_epochs", type=int, default=10, help="set number of epochs")
+    parser.add_argument("-e", "--num_epochs", type=int, default=100, help="set number of epochs")
     parser.add_argument("-b", "--batch_size", type=int, default=256, help="set batch size")
     parser.add_argument("-l", '--loss', type=str, choices=['cross_entropy', 'hinge'], default="cross_entropy", help="choose loss (objective) function")
     parser.add_argument("-s", "--save_model", action="store_true", help="save model (weights)")
