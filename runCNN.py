@@ -9,7 +9,7 @@ import theano.tensor as T
 import lasagne
 from aux import iterate_minibatches
 from read_data import load_cifar10
-from cnn_models import build_ccfff_model
+from cnn_models import build_ccfff_model, build_ccffsvm_model
 
 
 def main():
@@ -42,7 +42,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
     parser.add_argument("-d", "--dataset", type=str, choices=['mnist', 'cifar10', 'cifar100', 'svhn'], default='cifar10', help="choose dataset")
-    parser.add_argument("-a", "--architecture", type=str, choices=['ccfff'], default="ccfff", help="choose CNN architecture")
+    parser.add_argument("-a", "--architecture", type=str, choices=['ccfff', 'ccffsvm'], default="ccffsvm", help="choose CNN architecture")
     parser.add_argument("-e", "--num_epochs", type=int, default=100, help="set number of epochs")
     parser.add_argument("-b", "--batch_size", type=int, default=256, help="set batch size")
     parser.add_argument("-l", '--loss', type=str, choices=['cross_entropy', 'hinge'], default="cross_entropy", help="choose loss (objective) function")
@@ -62,16 +62,16 @@ def main():
     sys.stdout.flush()
     if args.dataset == "mnist":
         raise NotImplementedError
-    if args.dataset == "cifar10":
+    elif args.dataset == "cifar10":
         # Load dataset
         X_train, y_train, X_val, y_val, X_test, y_test = load_cifar10()
         data_shape = (None, 3, 32, 32)
         # Prepare Theano variables for inputs and targets
         input_var = T.tensor4('inputs')
         target_var = T.ivector('targets')
-    if args.dataset == "cifar100":
+    elif args.dataset == "cifar100":
         raise NotImplementedError
-    if args.dataset == "svhn":
+    elif args.dataset == "svhn":
         raise NotImplementedError
     print("Done!")
 
@@ -80,20 +80,28 @@ def main():
     sys.stdout.flush()
     if args.architecture == "ccfff":
         network = build_ccfff_model(input_var=input_var, data_shape=data_shape)
-    if args.architecture == "":
+    elif args.architecture == "ccffsvm": 
+        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape)
+    elif args.architecture == "":
         raise NotImplementedError
-    print("Done!")
 
     if args.verbose:
         print(" # Number of parameters in model: %d"
               % lasagne.layers.count_params(network, trainable=True))
 
-    # Create a loss expression for training
-    prediction = lasagne.layers.get_output(network)
-    if args.loss == "cross_entropy":
-        loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
-    if args.loss == "hinge":
-        loss = lasagne.objectives.multiclass_hinge_loss(prediction, target_var)
+    if (args.architecture == "ccffsvm"):
+        scores = lasagne.layers.get_output(network)
+        loss = network.get_one_vs_all_cost_from_scores(scores, target_var)
+
+        prediction = network.get_class_from_scores(scores)
+    else:
+        # Create a loss expression for training
+        prediction = lasagne.layers.get_output(network)
+        if args.loss == "cross_entropy":
+            loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
+        if args.loss == "hinge":
+            loss = lasagne.objectives.multiclass_hinge_loss(prediction, target_var)
+ 
     loss = loss.mean()
 
     # Add weight decay
@@ -105,6 +113,9 @@ def main():
     # Stochastic Gradient Descent (SGD) with momentum
     params = lasagne.layers.get_all_params(network, trainable=True)
     lr = 0.1
+    if (args.architecture == "ccffsvm"):
+        lr = 0.01
+
     sh_lr = theano.shared(lasagne.utils.floatX(lr))
     updates = lasagne.updates.momentum(loss, params, learning_rate=sh_lr, momentum=0.9)
 
@@ -113,17 +124,30 @@ def main():
     train_fn = theano.function([input_var, target_var], loss, updates=updates)
 
     # Create a loss expression for validation/testing
-    test_prediction = lasagne.layers.get_output(network, deterministic=True)
-    if args.loss == "cross_entropy":
-        test_loss = lasagne.objectives.categorical_crossentropy(test_prediction, target_var)
-    if args.loss == "hinge":
-        test_loss = lasagne.objectives.multiclass_hinge_loss(test_prediction, target_var)
-    test_loss = test_loss.mean()
-    test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), target_var),
-                      dtype=theano.config.floatX)
+    if (args.architecture == "ccffsvm"):
+        scores = lasagne.layers.get_output(network, deterministic=True)
+        test_loss = network.get_one_vs_all_cost_from_scores(scores, target_var)
+
+        test_prediction = network.get_class_from_scores(scores)
+
+        test_acc = T.mean(T.eq(test_prediction, target_var),
+                          dtype=theano.config.floatX)
+    else:
+        test_prediction = lasagne.layers.get_output(network, deterministic=True)
+        if args.loss == "cross_entropy":
+            test_loss = lasagne.objectives.categorical_crossentropy(test_prediction, target_var)
+        if args.loss == "hinge":
+            test_loss = lasagne.objectives.multiclass_hinge_loss(test_prediction, target_var)
+        test_loss = test_loss.mean()
+
+        test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), target_var),
+                          dtype=theano.config.floatX)
 
     # Compile a second function computing the validation loss and accuracy:
     val_fn = theano.function([input_var, target_var], [test_loss, test_acc])
+
+    # Done building network and compiling functions
+    print("Done!")
 
     # Start training
     print(" # Starting training...", end="")
