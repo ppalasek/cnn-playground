@@ -32,6 +32,10 @@ def get_mnist():
     """
     remove_gz_file = True
     output_dir = './data/mnist/'
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     mnist_files_md5sums = {'train-images-idx3-ubyte.gz': 'f68b3c2dcbeaaa9fbdd348bbdeb94873',
                            'train-labels-idx1-ubyte.gz': 'd53e105ee54ea40749a09fcbcd1e9432',
                            't10k-images-idx3-ubyte.gz': '9fb629c4189551a2d022fa330f9573f3',
@@ -101,6 +105,10 @@ def get_cifar10():
     """
     remove_targz_file = False
     output_dir = './data/cifar10/'
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     file = 'cifar-10-python.tar.gz'
     # Download file
     print(" -- Download '%s'..." % file, end="")
@@ -167,6 +175,10 @@ def get_cifar100():
     """
     remove_targz_file = False
     output_dir = './data/cifar100/'
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     file = 'cifar-100-python.tar.gz'
     # Download file
     print(" -- Download '%s'..." % file, end="")
@@ -231,6 +243,10 @@ def get_svhn():
 
     """
     output_dir = './data/svhn/'
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     svhn_files_md5sums = {'train_32x32.mat': 'e26dedcc434d2e4c54c9b2d4a06d8373',
                           'test_32x32.mat': 'eb5a983be6a315427106f1b164d9cef3'}
 
