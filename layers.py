@@ -10,6 +10,8 @@ class SVMlayer(lasagne.layers.Layer):
                  incoming,
                  coef=lasagne.init.Normal(0.1),
                  intercept=lasagne.init.Normal(0.1),
+                 C=15,
+                 trainable_C=True,
                  return_scores=False,
                  num_classes=None,
                  sample_dim=None,
@@ -30,6 +32,7 @@ class SVMlayer(lasagne.layers.Layer):
         # the regularization is already explicitly added later
         self._coef = self.add_param(coef, (self.num_classes, self.sample_dim), name='svm_coef', regularizable=False)
         self._intercept = self.add_param(intercept, (self.num_classes, ), name='svm_intercept', regularizable=False)
+        self.C = self.add_param(lasagne.init.Constant(C), (), name='svm_C', regularizable=False, trainable=trainable_C)
 
         self.return_scores = return_scores
 
@@ -60,7 +63,7 @@ class SVMlayer(lasagne.layers.Layer):
 
         return get_class_from_scores(scores)
 
-    def get_one_vs_all_cost_from_scores(self, scores, target, C=100):
+    def get_one_vs_all_cost_from_scores(self, scores, target):
         # this is squared hinge loss!
 
         # target one hot encoded and in {-1, 1}
@@ -68,7 +71,7 @@ class SVMlayer(lasagne.layers.Layer):
         y_i -= 1
 
         num_samples = T.cast(target.shape[0], 'float32')
-        lambda_coef = 1. / (num_samples * C)
+        lambda_coef = 1. / (num_samples * self.C)
 
         cost =  T.maximum(0, 1 - y_i * scores) ** 2
         final_cost = cost.mean(axis=0).sum()

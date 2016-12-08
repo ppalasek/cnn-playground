@@ -117,6 +117,8 @@ def build_ccffsvm_model(input_var=None, data_shape=None):
                        return_scores=True,
                        num_classes=10,
                        sample_dim=256,
+                       trainable_C=True,
+                       C=15,
                        name='svm')
 
     return network
