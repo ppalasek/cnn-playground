@@ -4,8 +4,7 @@ A framework for training/testing a Convolutional Neural Network (CNN) using Thea
 
 ###Prerequisites
 
- - Theano (Prefer the [bleeding-edge version](http://deeplearning.net/software/theano/install.html#bleeding-edge-install-instructions))
- - Lasagne (Prefer the [bleeding-edge version](http://lasagne.readthedocs.io/en/latest/user/installation.html#bleeding-edge-version))
+ - Theano & Lasagne (Prefer the [bleeding-edge versions](http://lasagne.readthedocs.io/en/latest/user/installation.html#bleeding-edge-version))
  - Install the latest CUDA Toolkit and possibly the corresponding driver available from NVIDIA: https://developer.nvidia.com/cuda-downloads
 
 To configure Theano to *use the GPU by default*, create a file `.theanorc` directly in your home directory, with the following contents:
@@ -31,6 +30,7 @@ and a set of basic **architectures** for training and evaluating a CNN. More spe
 
 
  - **`'ccfff'`**: A simple architecture consisting of 2 convolution and 3 fully-connected layers (see `build_ccfff_model()` in `cnn_models.py` for more details)
+ - **`'ccffsvm'`**: 
  - *More to be added.*
 
 
@@ -73,7 +73,7 @@ For training/evaluating a CNN, you need to run the `runCNN.py` script. It's usag
 
 Usage:
 ~~~
-runCNN.py [-h][-v][-d <DATASET>][-a <ARCHITECTURE>][-e NUM_EPOCHS][-b BATCH_SIZE][-l <LOSS>][-s]
+runCNN.py [-h][-v][-d <DATASET>][-a <ARCHITECTURE>][-e NUM_EPOCHS][-b BATCH_SIZE][-s]
 ~~~
 Arguments:
 ~~~
@@ -83,6 +83,5 @@ Arguments:
 	-a, --architecture : choose architecture from {'ccfff'} (default: 'ccfff')
 	-e, --num_epochs : set number of epochs
 	-b, --batch_size : set batch size
-	-l, --loss : choose loss function
 	-s, --save_model : save model file
 ~~~
