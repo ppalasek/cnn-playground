@@ -13,10 +13,10 @@ def check_mnist():
     Check ...
     """
     output_dir = './data/mnist/'
-    output_files = {'train-images-idx3-ubyte': False,
-                    'train-labels-idx1-ubyte': False,
-                    't10k-images-idx3-ubyte': False,
-                    't10k-labels-idx1-ubyte': False}
+    output_files = {'train-images-idx3-ubyte.gz': False,
+                    'train-labels-idx1-ubyte.gz': False,
+                    't10k-images-idx3-ubyte.gz': False,
+                    't10k-labels-idx1-ubyte.gz': False}
     # Check if files exist
     for file in output_files.iteritems():
         output_file = "%s%s" % (output_dir, file[0])
@@ -30,7 +30,6 @@ def get_mnist():
     """
 
     """
-    remove_gz_file = True
     output_dir = './data/mnist/'
 
     if not os.path.exists(output_dir):
@@ -48,32 +47,18 @@ def get_mnist():
         sys.stdout.flush()
         url = 'http://yann.lecun.com/exdb/mnist/%s' % file
         response = requests.get(url, stream=True)
-        output_file_gz = "%s%s" % (output_dir, file)
-        output_file = output_file_gz.replace(".gz", "")
-        with open(output_file_gz, 'wb') as out_file:
+        output_file = "%s%s" % (output_dir, file)
+        with open(output_file, 'wb') as out_file:
             shutil.copyfileobj(response.raw, out_file)
         del response
         print("Done!")
         # Check md5sum
-        if hashlib.md5(open(output_file_gz, 'rb').read()).hexdigest() == file_md5sum:
+        if hashlib.md5(open(output_file, 'rb').read()).hexdigest() == file_md5sum:
             print("    -- Check md5sum: PASS")
         else:
             print("    -- Check md5sum: FAIL")
             md5sum_error = "Check of md5sum failed for file '%s'" % file
             raise ValueError(md5sum_error)
-        # Extract gunzip file
-        print("    -- Extract .gz file...", end="")
-        sys.stdout.flush()
-        inF = gzip.open(output_file_gz, 'rb')
-        outF = open(output_file, 'wb')
-        outF.write(inF.read())
-        inF.close()
-        outF.close()
-        print("Done!")
-        if remove_gz_file:
-            print("    -- Delete .gz file...", end="")
-            os.remove(output_file_gz)
-            print("Done!")
 
 
 def check_cifar10():
