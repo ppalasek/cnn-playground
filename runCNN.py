@@ -95,15 +95,10 @@ def main():
     if args.architecture == "ccffsvm":
         scores = lasagne.layers.get_output(network)
         loss = network.get_one_vs_all_cost_from_scores(scores, target_var)
-
-    else:
+    elif args.architecture == "ccfff":
         # Create a loss expression for training
         prediction = lasagne.layers.get_output(network)
-        if args.loss == "cross_entropy":
-            loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
-        if args.loss == "hinge":
-            loss = lasagne.objectives.multiclass_hinge_loss(prediction, target_var)
- 
+        loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
     loss = loss.mean()
 
     # Add weight decay
