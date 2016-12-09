@@ -4,6 +4,34 @@
 import pickle
 import numpy as np
 import glob
+import gzip
+
+
+def load_mnist(dirpath='./data/mnist'):
+    """
+    """
+    def load_mnist_images(filename):
+        with gzip.open(filename, 'rb') as f:
+            data = np.frombuffer(f.read(), np.uint8, offset=16)
+        data = data.reshape(-1, 1, 28, 28)
+        return data / np.float32(256)
+
+    def load_mnist_labels(filename):
+        with gzip.open(filename, 'rb') as f:
+            data = np.frombuffer(f.read(), np.uint8, offset=8)
+        return data
+
+    # Read the training and test set images and labels.
+    X_train = load_mnist_images('%s/train-images-idx3-ubyte.gz' % dirpath)
+    y_train = load_mnist_labels('%s/train-labels-idx1-ubyte.gz' % dirpath)
+    X_test = load_mnist_images('%s/t10k-images-idx3-ubyte.gz' % dirpath)
+    y_test = load_mnist_labels('%s/t10k-labels-idx1-ubyte.gz' % dirpath)
+
+    # We reserve the last 10000 training examples for validation.
+    X_train, X_val = X_train[:-10000], X_train[-10000:]
+    y_train, y_val = y_train[:-10000], y_train[-10000:]
+
+    return X_train, y_train, X_val, y_val, X_test, y_test
 
 
 def load_cifar10(dirpath='./data/cifar10'):
@@ -48,3 +76,10 @@ def load_cifar10(dirpath='./data/cifar10'):
 
     return X_train, y_train, X_valid, y_valid, X_test, y_test
 
+
+def load_cifar100(dirpath='./data/cifar100'):
+    raise NotImplementedError
+
+
+def load_svhn(dirpath='./data/svhn'):
+    raise NotImplementedError
