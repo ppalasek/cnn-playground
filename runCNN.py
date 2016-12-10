@@ -49,7 +49,7 @@ def main():
     parser.add_argument("-r", "--save_results", action="store_true", help="save results (./results/)")
     parser.add_argument("-a", "--architecture",
                         type=str,
-                        choices=['ccfff-ap'
+                        choices=['ccfff-ap',
                                  'ccfff-ap-d',
                                  'ccfff-mp',
                                  'ccfff-mp-d',
