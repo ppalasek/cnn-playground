@@ -47,6 +47,7 @@ def main():
     parser.add_argument("-b", "--batch_size", type=int, default=256, help="set batch size")
     parser.add_argument("-m", "--save_model", action="store_true", help="save model (./trained_models/)")
     parser.add_argument("-r", "--save_results", action="store_true", help="save results (./results/)")
+    parser.add_argument("-i", "--iter", type=int, help="iteration")
     parser.add_argument("-a", "--architecture",
                         type=str,
                         choices=['ccfff-ap',
@@ -205,18 +206,20 @@ def main():
         # Create results file for validation loss and accuracy (over epochs)
         # Filename format:
         # <dataset>_<architecture>_<num_epochs>_<batch_size>_valid.results
-        valid_results_filename = "%s/%s_%s_%d_%d_valid.results" % \
+        valid_results_filename = "%s/%s_%s_%d_%d_valid_%d.results" % \
                                  (results_dir, args.dataset,
-                                  args.architecture, args.num_epochs, args.batch_size)
+                                  args.architecture, args.num_epochs,
+                                  args.batch_size, args.iter)
         if os.path.exists(valid_results_filename):
             os.remove(valid_results_filename)
 
         # Create results file for test loss and accuracy
         # Filename format:
         # <dataset>_<architecture>_<num_epochs>_<batch_size>_test.results
-        test_results_filename = "%s/%s_%s_%d_%d_test.results" % \
+        test_results_filename = "%s/%s_%s_%d_%d_test_%d.results" % \
                                 (results_dir, args.dataset,
-                                 args.architecture, args.num_epochs, args.batch_size)
+                                 args.architecture, args.num_epochs,
+                                 args.batch_size, args.iter)
         if os.path.exists(test_results_filename):
             os.remove(test_results_filename)
 
@@ -277,9 +280,9 @@ def main():
             os.makedirs(trained_models_dir)
         # Trained model filename format:
         # <dataset>_<architecture>_<num_epochs>_<batch_size>_model.npz
-        model_filename = "%s/%s_%s_%d_%d_model.npz" % \
+        model_filename = "%s/%s_%s_%d_%d_model_%d.npz" % \
                          (trained_models_dir, args.dataset, args.architecture,
-                          args.num_epochs, args.batch_size)
+                          args.num_epochs, args.batch_size, args.iter)
         np.savez(model_filename, *lasagne.layers.get_all_param_values(network))
         print("Done!")
 
