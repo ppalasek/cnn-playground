@@ -5,19 +5,20 @@ from lasagne.layers import InputLayer, Conv2DLayer, Pool2DLayer, DenseLayer, dro
 
 from layers import SVMlayer as SVMLayer
 
-def build_ccfff_model(input_var=None, data_shape=None):
+
+def build_ccfff_model(input_var=None, data_shape=None, pool_mode='max', use_dropout=False):
     """
     ---------------------
     Architecture: "CCFFF"
     ---------------------
-        Input Layer
-        ConvLayer  : 64 filters, 3x3
-        MaxPooling : 2x2
-        ConvLayer  : 128 filters, 3x3
-        MaxPooling : 2x2
-        FCLayer    : 256 units (+ReLU)
-        FCLayer    : 256 units (+ReLU)
-        FCLayer    :  10 units (+Soft-max) [Output Layer]
+        [Input Layer]
+         ConvLayer  : 64 filters, 3x3
+         Pooling    : 2x2 ('max', 'average_exc_pad')
+         ConvLayer  : 128 filters, 3x3
+         Pooling    : 2x2 ('max', 'average_exc_pad')
+         FCLayer    : 256 units (+ReLU) (+/- dropout)
+         FCLayer    : 256 units (+ReLU) (+/- dropout)
+         FCLayer    :  10 units (+Soft-max) = [Output Layer]
     """
     # Input layer
     network = InputLayer(shape=data_shape, input_var=input_var)
@@ -30,29 +31,41 @@ def build_ccfff_model(input_var=None, data_shape=None):
                           W=lasagne.init.GlorotUniform(),
                           name='conv_1')
     # 1st pooling layer
-    network = Pool2DLayer(network, pool_size=(2, 2), mode='max', name='pool_1')
+    network = Pool2DLayer(network, pool_size=(2, 2), mode=pool_mode, name='pool_1')
 
     # 2nd convolution layer
     network = Conv2DLayer(network,
                           num_filters=128,
                           filter_size=(3, 3),
-                          nonlinearity=lasagne.nonlinearities.rectify,
+                          nonlinearity=relu,
                           W=lasagne.init.GlorotUniform(),
                           name='conv_2')
     # 2nd pooling layer
-    network = Pool2DLayer(network, pool_size=(2, 2), mode='max', name='pool_2')
+    network = Pool2DLayer(network, pool_size=(2, 2), mode=pool_mode, name='pool_2')
 
     # 1st Fully-connected layer
-    network = DenseLayer(incoming=dropout(network, p=0.5),
-                         num_units=256,
-                         nonlinearity=relu,
-                         name='fc_1')
+    if use_dropout:
+        network = DenseLayer(incoming=dropout(network, p=0.5),
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_1')
+    else:
+        network = DenseLayer(network,
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_1')
 
     # 2nd Fully-connected layer
-    network = DenseLayer(incoming=dropout(network, p=0.5),
-                         num_units=256,
-                         nonlinearity=relu,
-                         name='fc_2')
+    if use_dropout:
+        network = DenseLayer(incoming=dropout(network, p=0.5),
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_2')
+    else:
+        network = DenseLayer(network,
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_2')
 
     # Output layer
     network = DenseLayer(network,
@@ -63,19 +76,19 @@ def build_ccfff_model(input_var=None, data_shape=None):
     return network
 
 
-def build_ccffsvm_model(input_var=None, data_shape=None):
+def build_ccffsvm_model(input_var=None, data_shape=None, pool_mode='max', use_dropout=False):
     """
-    ---------------------
-    Architecture: "CCFFF"
-    ---------------------
+    -----------------------
+    Architecture: "CCFFSVM"
+    -----------------------
         Input Layer
         ConvLayer  : 64 filters, 3x3
-        MaxPooling : 2x2
+        MaxPooling : 2x2 ('max', 'average_exc_pad')
         ConvLayer  : 128 filters, 3x3
-        MaxPooling : 2x2
-        FCLayer    : 256 units (+ReLU)
-        FCLayer    : 256 units (+ReLU)
-        SVMLayer    :  [Output Layer]
+        MaxPooling : 2x2 ('max', 'average_exc_pad')
+        FCLayer    : 256 units (+ReLU) (+/- dropout)
+        FCLayer    : 256 units (+ReLU) (+/- dropout)
+        SVMLayer   = [Output Layer]
     """
     # Input layer
     network = InputLayer(shape=data_shape, input_var=input_var)
@@ -88,29 +101,41 @@ def build_ccffsvm_model(input_var=None, data_shape=None):
                           W=lasagne.init.GlorotUniform(),
                           name='conv_1')
     # 1st pooling layer
-    network = Pool2DLayer(network, pool_size=(2, 2), mode='max', name='pool_1')
+    network = Pool2DLayer(network, pool_size=(2, 2), mode=pool_mode, name='pool_1')
 
     # 2nd convolution layer
     network = Conv2DLayer(network,
                           num_filters=128,
                           filter_size=(3, 3),
-                          nonlinearity=lasagne.nonlinearities.rectify,
+                          nonlinearity=relu,
                           W=lasagne.init.GlorotUniform(),
                           name='conv_2')
     # 2nd pooling layer
-    network = Pool2DLayer(network, pool_size=(2, 2), mode='max', name='pool_2')
+    network = Pool2DLayer(network, pool_size=(2, 2), mode=pool_mode, name='pool_2')
 
     # 1st Fully-connected layer
-    network = DenseLayer(incoming=dropout(network, p=0.5),
-                         num_units=256,
-                         nonlinearity=relu,
-                         name='fc_1')
+    if use_dropout:
+        network = DenseLayer(incoming=dropout(network, p=0.5),
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_1')
+    else:
+        network = DenseLayer(network,
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_1')
 
     # 2nd Fully-connected layer
-    network = DenseLayer(incoming=dropout(network, p=0.5),
-                         num_units=256,
-                         nonlinearity=relu,
-                         name='fc_2')
+    if use_dropout:
+        network = DenseLayer(incoming=dropout(network, p=0.5),
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_2')
+    else:
+        network = DenseLayer(network,
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_2')
 
     # Output layer
     network = SVMLayer(network,
