@@ -62,12 +62,12 @@ def main():
                         help="choose CNN architecture")
     args = parser.parse_args()
 
-    # Brief description of ...
-    if args.verbose:
-        print(" # Training a CNN on %s with: " % args.dataset)
-        print("    -- Architecture     : %s" % args.architecture)
-        print("    -- Number of epochs : %d" % args.num_epochs)
-        print("    -- Batch size       : %d" % args.batch_size)
+    # Print a brief description of the experiment
+    print(" # Training a CNN on %s with: " % args.dataset)
+    print("    -- Architecture     : %s" % args.architecture)
+    print("    -- Number of epochs : %d" % args.num_epochs)
+    print("    -- Batch size       : %d" % args.batch_size)
+    print("    -- Iteration        : %d" % args.iter)
 
     # Load the dataset
     print(" # Loading data...", end="")
