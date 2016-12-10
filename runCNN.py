@@ -43,10 +43,22 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", action="store_true", help="increase output verbosity")
     parser.add_argument("-d", "--dataset", type=str, choices=['mnist', 'cifar10', 'cifar100', 'svhn'], default='cifar10', help="choose dataset")
-    parser.add_argument("-a", "--architecture", type=str, choices=['ccfff', 'ccffsvm'], default="ccffsvm", help="choose CNN architecture")
     parser.add_argument("-e", "--num_epochs", type=int, default=100, help="set number of epochs")
     parser.add_argument("-b", "--batch_size", type=int, default=256, help="set batch size")
-    parser.add_argument("-s", "--save_model", action="store_true", help="save model (weights)")
+    parser.add_argument("-m", "--save_model", action="store_true", help="save model (./trained_models/)")
+    parser.add_argument("-r", "--save_results", action="store_true", help="save results (./results/)")
+    parser.add_argument("-a", "--architecture",
+                        type=str,
+                        choices=['ccfff-ap'
+                                 'ccfff-ap-d',
+                                 'ccfff-mp',
+                                 'ccfff-mp-d',
+                                 'ccffsvm-ap',
+                                 'ccffsvm-ap-d',
+                                 'ccffsvm-mp',
+                                 'ccffsvm-mp-d'],
+                        default="ccfff-mp-d",
+                        help="choose CNN architecture")
     args = parser.parse_args()
 
     # Brief description of ...
@@ -85,20 +97,60 @@ def main():
     # Build the CNN model
     print(" # Building cnn model and compiling functions...", end="")
     sys.stdout.flush()
-    if args.architecture == "ccfff":
-        network = build_ccfff_model(input_var=input_var, data_shape=data_shape)
-    elif args.architecture == "ccffsvm": 
-        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape)
+
+    # --------------------
+    # Architectures: CCFFF
+    # --------------------
+    if args.architecture == 'ccfff-ap':
+        network = build_ccfff_model(input_var=input_var, data_shape=data_shape,
+                                    pool_mode='average_exc_pad', use_dropout=False)
+
+    elif args.architecture == 'ccfff-ap-d':
+        network = build_ccfff_model(input_var=input_var, data_shape=data_shape,
+                                    pool_mode='average_exc_pad', use_dropout=True)
+
+    elif args.architecture == 'ccfff-mp':
+        network = build_ccfff_model(input_var=input_var, data_shape=data_shape,
+                                    pool_mode='max', use_dropout=False)
+
+    elif args.architecture == 'ccfff-mp-d':
+        network = build_ccfff_model(input_var=input_var, data_shape=data_shape,
+                                    pool_mode='max', use_dropout=True)
+    # ----------------------
+    # Architectures: CCFFSVM
+    # ----------------------
+    elif args.architecture == 'ccffsvm-ap':
+        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape,
+                                      pool_mode='average_exc_pad', use_dropout=False)
+
+    elif args.architecture == 'ccffsvm-ap-d':
+        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape,
+                                      pool_mode='average_exc_pad', use_dropout=True)
+
+    elif args.architecture == 'ccffsvm-mp':
+        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape,
+                                      pool_mode='max', use_dropout=False)
+    elif args.architecture == 'ccffsvm-mp-d':
+        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape,
+                                      pool_mode='max', use_dropout=True)
+    #
+    # Architectures: To be added more ...
+    #
     elif args.architecture == "":
         raise NotImplementedError
 
-    if args.architecture == "ccffsvm":
-        scores = lasagne.layers.get_output(network)
-        loss = network.get_one_vs_all_cost_from_scores(scores, target_var)
-    elif args.architecture == "ccfff":
-        # Create a loss expression for training
+
+    #
+    # So Far...
+    #
+    # Create a loss expression for training
+    if "ccfff" in args.architecture:
         prediction = lasagne.layers.get_output(network)
         loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
+
+    elif "ccffsvm" in args.architecture:
+        scores = lasagne.layers.get_output(network)
+        loss = network.get_one_vs_all_cost_from_scores(scores, target_var)
     loss = loss.mean()
 
     # Add weight decay
@@ -109,11 +161,10 @@ def main():
     # Create update expressions for training
     # Stochastic Gradient Descent (SGD) with momentum
     params = lasagne.layers.get_all_params(network, trainable=True)
-    if args.architecture == "ccffsvm":
+    if "ccffsvm" in args.architecture:
         lr = 0.01
     else:
         lr = 0.1
-
     sh_lr = theano.shared(lasagne.utils.floatX(lr))
     updates = lasagne.updates.momentum(loss, params, learning_rate=sh_lr, momentum=0.9)
 
@@ -122,14 +173,14 @@ def main():
     train_fn = theano.function([input_var, target_var], loss, updates=updates)
 
     # Create a loss expression for validation/testing
-    if args.architecture == "ccfff":
+    if "ccfff" in args.architecture:
         test_prediction = lasagne.layers.get_output(network, deterministic=True)
         test_loss = lasagne.objectives.categorical_crossentropy(test_prediction, target_var)
         test_loss = test_loss.mean()
         test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), target_var),
                           dtype=theano.config.floatX)
 
-    elif args.architecture == "ccffsvm":
+    elif "ccffsvm" in args.architecture:
         scores = lasagne.layers.get_output(network, deterministic=True)
         test_loss = network.get_one_vs_all_cost_from_scores(scores, target_var)
         test_prediction = network.get_class_from_scores(scores)
@@ -143,6 +194,31 @@ def main():
     print("Done!")
     print(" # Number of parameters in model: %d" %
           lasagne.layers.count_params(network, trainable=True))
+
+    # Save results
+    if args.save_results:
+        # Create ./results dir (if doesn't exist)
+        results_dir = "./results"
+        if not os.path.exists(results_dir):
+            os.makedirs(results_dir)
+
+        # Create results file for validation loss and accuracy (over epochs)
+        # Filename format:
+        # <dataset>_<architecture>_<num_epochs>_<batch_size>_valid.results
+        valid_results_filename = "%s/%s_%s_%d_%d_valid.results" % \
+                                 (results_dir, args.dataset,
+                                  args.architecture, args.num_epochs, args.batch_size)
+        if os.path.exists(valid_results_filename):
+            os.remove(valid_results_filename)
+
+        # Create results file for test loss and accuracy
+        # Filename format:
+        # <dataset>_<architecture>_<num_epochs>_<batch_size>_test.results
+        test_results_filename = "%s/%s_%s_%d_%d_test.results" % \
+                                (results_dir, args.dataset,
+                                 args.architecture, args.num_epochs, args.batch_size)
+        if os.path.exists(test_results_filename):
+            os.remove(test_results_filename)
 
     # Start training
     print(" # Starting training...", end="")
@@ -179,6 +255,11 @@ def main():
             print("  validation accuracy:\t\t{:.2f} %".format(
                 val_acc / val_batches * 100))
 
+        with open(valid_results_filename, "a") as valid_results_fid:
+            valid_results_fid.write("%.6f %.6f %.6f\n" % (train_err / train_batches,
+                                                          val_err / val_batches,
+                                                          val_acc / val_batches * 100))
+
         # # Adjust learning rate (after 41 and 61 epochs)
         # if (epoch + 1) == 41 or (epoch + 1) == 61:
         #     new_lr = sh_lr.get_value() * 0.1
@@ -190,7 +271,7 @@ def main():
     if args.save_model:
         if args.verbose:
             print(" # Save trained model...", end="")
-        # Create trained model dir
+        # Create ./trained_models dir (if doesn't exist)
         trained_models_dir = "./trained_models"
         if not os.path.exists(trained_models_dir):
             os.makedirs(trained_models_dir)
@@ -215,6 +296,10 @@ def main():
     print(" # Final results:")
     print("   test loss:\t\t\t{:.6f}".format(test_err / test_batches))
     print("   test accuracy:\t\t{:.2f} %".format(test_acc / test_batches * 100))
+
+    with open(test_results_filename, "w") as test_results_fid:
+        test_results_fid.write("%.6f %.6f\n" % (test_err / test_batches,
+                                                test_acc / test_batches * 100))
 
 
 if __name__ == "__main__":
