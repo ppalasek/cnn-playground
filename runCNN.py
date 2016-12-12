@@ -50,14 +50,11 @@ def main():
     parser.add_argument("-i", "--iter", type=int, help="iteration")
     parser.add_argument("-a", "--architecture",
                         type=str,
-                        choices=['ccfff-ap',
-                                 'ccfff-ap-d',
-                                 'ccfff-mp',
+                        choices=['ccfff-ap-d',
                                  'ccfff-mp-d',
-                                 'ccffsvm-ap',
                                  'ccffsvm-ap-d',
-                                 'ccffsvm-mp',
                                  'ccffsvm-mp-d',
+                                 'vgg5',
                                  'vgg16'],
                         default="ccfff-mp-d",
                         help="choose CNN architecture")
@@ -103,48 +100,35 @@ def main():
     # --------------------
     # Architectures: CCFFF
     # --------------------
-    if args.architecture == 'ccfff-ap':
-        network = build_ccfff_model(input_var=input_var, data_shape=data_shape,
-                                    pool_mode='average_exc_pad', use_dropout=False)
-
-    elif args.architecture == 'ccfff-ap-d':
-        network = build_ccfff_model(input_var=input_var, data_shape=data_shape,
-                                    pool_mode='average_exc_pad', use_dropout=True)
-
-    elif args.architecture == 'ccfff-mp':
-        network = build_ccfff_model(input_var=input_var, data_shape=data_shape,
-                                    pool_mode='max', use_dropout=False)
+    if args.architecture == 'ccfff-ap-d':
+        network = build_ccfff_model(input_var=input_var, data_shape=data_shape, pool_mode='average_inc_pad')
 
     elif args.architecture == 'ccfff-mp-d':
-        network = build_ccfff_model(input_var=input_var, data_shape=data_shape,
-                                    pool_mode='max', use_dropout=True)
+        network = build_ccfff_model(input_var=input_var, data_shape=data_shape, pool_mode='max')
+
     # ----------------------
     # Architectures: CCFFSVM
     # ----------------------
-    elif args.architecture == 'ccffsvm-ap':
-        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape,
-                                      pool_mode='average_exc_pad', use_dropout=False)
-
     elif args.architecture == 'ccffsvm-ap-d':
-        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape,
-                                      pool_mode='average_exc_pad', use_dropout=True)
+        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape, pool_mode='average_inc_pad')
 
-    elif args.architecture == 'ccffsvm-mp':
-        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape,
-                                      pool_mode='max', use_dropout=False)
     elif args.architecture == 'ccffsvm-mp-d':
-        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape,
-                                      pool_mode='max', use_dropout=True)
+        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape, pool_mode='max')
+
+    # -----------------------
+    # Architectures: VGG-like
+    # -----------------------
     elif args.architecture == "vgg5":
         network = build_vgg5(input_var=input_var, data_shape=data_shape)
+
     elif args.architecture == "vgg16":
         network = build_vgg16(input_var=input_var, data_shape=data_shape)
-    #
+
+    # -----------------------------------
     # Architectures: To be added more ...
-    #
+    # -----------------------------------
     elif args.architecture == "":
         raise NotImplementedError
-
 
     #
     # So Far...
