@@ -148,7 +148,7 @@ def main():
     # So Far...
     #
     # Create a loss expression for training
-    if "ccfff" in args.architecture:
+    if ("ccfff" in args.architecture) or (args.architecture == 'vgg16'):
         prediction = lasagne.layers.get_output(network)
         loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
 
