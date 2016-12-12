@@ -50,10 +50,10 @@ def main():
     parser.add_argument("-i", "--iter", type=int, help="iteration")
     parser.add_argument("-a", "--architecture",
                         type=str,
-                        choices=['ccfff-ap-d',
-                                 'ccfff-mp-d',
-                                 'ccffsvm-ap-d',
-                                 'ccffsvm-mp-d',
+                        choices=['ccfff-ap',
+                                 'ccfff-mp',
+                                 'ccffsvm-ap',
+                                 'ccffsvm-mp',
                                  'vgg5',
                                  'vgg16'],
                         default="ccfff-mp-d",
@@ -100,19 +100,19 @@ def main():
     # --------------------
     # Architectures: CCFFF
     # --------------------
-    if args.architecture == 'ccfff-ap-d':
+    if args.architecture == 'ccfff-ap':
         network = build_ccfff_model(input_var=input_var, data_shape=data_shape, pool_mode='average_inc_pad')
 
-    elif args.architecture == 'ccfff-mp-d':
+    elif args.architecture == 'ccfff-mp':
         network = build_ccfff_model(input_var=input_var, data_shape=data_shape, pool_mode='max')
 
     # ----------------------
     # Architectures: CCFFSVM
     # ----------------------
-    elif args.architecture == 'ccffsvm-ap-d':
+    elif args.architecture == 'ccffsvm-ap':
         network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape, pool_mode='average_inc_pad')
 
-    elif args.architecture == 'ccffsvm-mp-d':
+    elif args.architecture == 'ccffsvm-mp':
         network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape, pool_mode='max')
 
     # -----------------------
