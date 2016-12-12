@@ -147,3 +147,125 @@ def build_ccffsvm_model(input_var=None, data_shape=None, pool_mode='max', use_dr
                        name='svm')
 
     return network
+
+
+def build_vgg16(input_var=None, data_shape=None):
+    """
+
+    """
+    network = InputLayer(shape=data_shape, input_var=input_var)
+
+    network = Conv2DLayer(network,
+                          num_filters=64,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_1_1')
+
+    network = Conv2DLayer(network,
+                          num_filters=64,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_1_2')
+
+    network = Pool2DLayer(network, pool_size=(2, 2), name='pool_1')
+
+    network = Conv2DLayer(network,
+                          num_filters=128,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_2_1')
+
+    network = Conv2DLayer(network,
+                          num_filters=128,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_2_2')
+
+    network = Pool2DLayer(network, pool_size=(2, 2), name='pool_2')
+
+    network = Conv2DLayer(network,
+                          num_filters=256,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_3_1')
+
+    network = Conv2DLayer(network,
+                          num_filters=256,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_3_2')
+
+    network = Conv2DLayer(network,
+                          num_filters=256,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_3_3')
+
+    network = Pool2DLayer(network, pool_size=(2, 2), name='pool_3')
+
+    network = Conv2DLayer(network,
+                          num_filters=512,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_4_1')
+
+    network = Conv2DLayer(network,
+                          num_filters=512,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_4_2')
+
+    network = Conv2DLayer(network,
+                          num_filters=512,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_4_3')
+
+    network = Pool2DLayer(network, pool_size=(2, 2), name='pool_4')
+
+    network = Conv2DLayer(network,
+                          num_filters=512,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_5_1')
+
+    network = Conv2DLayer(network,
+                          num_filters=512,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_5_2')
+
+    network = Conv2DLayer(network,
+                          num_filters=512,
+                          filter_size=(3, 3),
+                          pad=1,
+                          flip_filters=False,
+                          name='conv_5_3')
+
+    network = Pool2DLayer(network, pool_size=(2, 2), name='pool_5')
+
+    network = DenseLayer(incoming=dropout(network, p=0.5),
+                         num_units=4096,
+                         name='fc_6')
+
+    network = DenseLayer(incoming=dropout(network, p=0.5),
+                         num_units=4096,
+                         name='fc_7')
+
+    network = DenseLayer(incoming=network,
+                         num_units=10,
+                         nonlinearity=softmax)
+
+    return network
