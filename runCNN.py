@@ -9,7 +9,7 @@ import theano.tensor as T
 import lasagne
 from aux import iterate_minibatches
 from read_data import load_mnist, load_cifar10, load_cifar100, load_svhn
-from cnn_models import build_ccfff_model, build_ccffsvm_model
+from cnn_models import build_ccfff_model, build_ccffsvm_model, build_vgg16
 
 
 def main():
@@ -135,6 +135,8 @@ def main():
     elif args.architecture == 'ccffsvm-mp-d':
         network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape,
                                       pool_mode='max', use_dropout=True)
+    elif args.architecture == "vgg16":
+        network = build_vgg16(input_var=input_var, data_shape=data_shape)
     #
     # Architectures: To be added more ...
     #
@@ -175,7 +177,7 @@ def main():
     train_fn = theano.function([input_var, target_var], loss, updates=updates)
 
     # Create a loss expression for validation/testing
-    if "ccfff" in args.architecture:
+    if ("ccfff" in args.architecture) or (args.architecture == 'vgg16'):
         test_prediction = lasagne.layers.get_output(network, deterministic=True)
         test_loss = lasagne.objectives.categorical_crossentropy(test_prediction, target_var)
         test_loss = test_loss.mean()
