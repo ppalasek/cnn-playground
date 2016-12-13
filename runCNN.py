@@ -138,13 +138,12 @@ def main():
     #
 
     # Create a loss expression for training
-    if ("ccfff" in args.architecture) or (args.architecture == 'vgg16'):
-        prediction = lasagne.layers.get_output(network)
-        loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
-
-    elif "ccffsvm" in args.architecture:
+    if "svm" in args.architecture:
         scores = lasagne.layers.get_output(network)
         loss = network.get_one_vs_all_cost_from_scores(scores, target_var)
+    else:
+        prediction = lasagne.layers.get_output(network)
+        loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
     loss = loss.mean()
 
     # Add weight decay
@@ -172,18 +171,18 @@ def main():
     train_fn = theano.function([input_var, target_var], loss, updates=updates)
 
     # Create a loss expression for validation/testing
-    if ("ccfff" in args.architecture) or (args.architecture == 'vgg16'):
-        test_prediction = lasagne.layers.get_output(network, deterministic=True)
-        test_loss = lasagne.objectives.categorical_crossentropy(test_prediction, target_var)
-        test_loss = test_loss.mean()
-        test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), target_var),
-                          dtype=theano.config.floatX)
-
-    elif "ccffsvm" in args.architecture:
+    if "svm" in args.architecture:
         scores = lasagne.layers.get_output(network, deterministic=True)
         test_loss = network.get_one_vs_all_cost_from_scores(scores, target_var)
         test_prediction = network.get_class_from_scores(scores)
         test_acc = T.mean(T.eq(test_prediction, target_var),
+                          dtype=theano.config.floatX)
+
+    else:
+        test_prediction = lasagne.layers.get_output(network, deterministic=True)
+        test_loss = lasagne.objectives.categorical_crossentropy(test_prediction, target_var)
+        test_loss = test_loss.mean()
+        test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), target_var),
                           dtype=theano.config.floatX)
 
     # Compile a second function computing the validation loss and accuracy:
