@@ -9,7 +9,7 @@ import theano.tensor as T
 import lasagne
 from aux import iterate_minibatches
 from read_data import load_mnist, load_cifar10, load_cifar100, load_svhn
-from cnn_models import build_ccfff_model, build_ccffsvm_model, build_vgg5, build_vgg16
+from cnn_models import build_ccfff_model, build_ccffsvm_model, build_vgg5, build_vgg5_svm
 
 
 def main():
@@ -123,10 +123,16 @@ def main():
     # Architectures: VGG-like
     # -----------------------
     elif args.architecture == "vgg5":
-        network = build_vgg16(input_var=input_var, data_shape=data_shape, do_batch_norm=False)
+        network = build_vgg5(input_var=input_var, data_shape=data_shape, do_batch_norm=False)
 
     elif args.architecture == "vgg5-bn":
-        network = build_vgg16(input_var=input_var, data_shape=data_shape, do_batch_norm=True)
+        network = build_vgg5(input_var=input_var, data_shape=data_shape, do_batch_norm=True)
+
+    elif args.architecture == "vgg5-svm":
+        network = build_vgg5_svm(input_var=input_var, data_shape=data_shape, do_batch_norm=False)
+
+    elif args.architecture == "vgg5-bn-svm":
+        network = build_vgg5_svm(input_var=input_var, data_shape=data_shape, do_batch_norm=True)
 
     # -----------------------------------
     # Architectures: To be added more ...
@@ -159,7 +165,9 @@ def main():
            'ccffsvm-ap': {1: 0.01},
            'ccffsvm-mp': {1: 0.01},
            'vgg5': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
-           'vgg16': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008}}
+           'vgg5-bn': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
+           'vgg5-svm': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
+           'vgg5-bn-svm': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008}}
     curr_lrs = LRs[args.architecture]
     # Get learning rate for the 1st epoch
     lr = curr_lrs[1]
