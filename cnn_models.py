@@ -1,7 +1,7 @@
 import lasagne
 from lasagne.nonlinearities import rectify as relu
 from lasagne.nonlinearities import softmax, sigmoid, softplus
-from lasagne.layers import InputLayer, Conv2DLayer, Pool2DLayer, DenseLayer, dropout, GaussianNoiseLayer
+from lasagne.layers import InputLayer, Conv2DLayer, Pool2DLayer, DenseLayer, dropout, GaussianNoiseLayer, batch_norm
 
 from layers import SVMlayer as SVMLayer
 
@@ -271,63 +271,103 @@ def build_vgg16(input_var=None, data_shape=None):
     return network
 
 
-def build_vgg5(input_var=None, data_shape=None):
+def build_vgg5(input_var=None, data_shape=None, do_batch_norm=False):
     """
 
     """
     network = InputLayer(shape=data_shape, input_var=input_var)
 
     # 1st convolution layer
-    network = Conv2DLayer(network,
-                          num_filters=64,
-                          filter_size=(3, 3),
-                          pad=1,
-                          flip_filters=False,
-                          name='conv_1')
+    if do_batch_norm:
+        network = batch_norm(Conv2DLayer(network,
+                                         num_filters=64,
+                                         filter_size=(3, 3),
+                                         pad=1,
+                                         flip_filters=False,
+                                         name='conv_1'))
+    else:
+        network = Conv2DLayer(network,
+                              num_filters=64,
+                              filter_size=(3, 3),
+                              pad=1,
+                              flip_filters=False,
+                              name='conv_1')
 
     # 1st pooling layer (max-pooling)
     network = Pool2DLayer(network, pool_size=(2, 2), name='pool_1')
 
     # 2nd convolution layer
-    network = Conv2DLayer(network,
-                          num_filters=128,
-                          filter_size=(3, 3),
-                          pad=1,
-                          flip_filters=False,
-                          name='conv_2')
+    if do_batch_norm:
+        network = batch_norm(Conv2DLayer(network,
+                                         num_filters=128,
+                                         filter_size=(3, 3),
+                                         pad=1,
+                                         flip_filters=False,
+                                         name='conv_2'))
+    else:
+        network = Conv2DLayer(network,
+                              num_filters=128,
+                              filter_size=(3, 3),
+                              pad=1,
+                              flip_filters=False,
+                              name='conv_2')
 
     # 2nd pooling layer (max-pooling)
     network = Pool2DLayer(network, pool_size=(2, 2), name='pool_2')
 
     # 3rd convolution layer
-    network = Conv2DLayer(network,
-                          num_filters=256,
-                          filter_size=(3, 3),
-                          pad=1,
-                          flip_filters=False,
-                          name='conv_3')
+    if do_batch_norm:
+        network = batch_norm(Conv2DLayer(network,
+                                         num_filters=256,
+                                         filter_size=(3, 3),
+                                         pad=1,
+                                         flip_filters=False,
+                                         name='conv_3'))
+    else:
+        network = Conv2DLayer(network,
+                              num_filters=256,
+                              filter_size=(3, 3),
+                              pad=1,
+                              flip_filters=False,
+                              name='conv_3')
 
     # 3rd pooling layer (max-pooling)
     network = Pool2DLayer(network, pool_size=(2, 2), name='pool_3')
 
     # 4th convolution layer
-    network = Conv2DLayer(network,
-                          num_filters=512,
-                          filter_size=(3, 3),
-                          pad=1,
-                          flip_filters=False,
-                          name='conv_4')
+    if do_batch_norm:
+        network = batch_norm(Conv2DLayer(network,
+                                         num_filters=512,
+                                         filter_size=(3, 3),
+                                         pad=1,
+                                         flip_filters=False,
+                                         name='conv_4'))
+    else:
+        network = Conv2DLayer(network,
+                              num_filters=512,
+                              filter_size=(3, 3),
+                              pad=1,
+                              flip_filters=False,
+                              name='conv_4')
 
     # 4th pooling layer (max-pooling)
     network = Pool2DLayer(network, pool_size=(2, 2), name='pool_4')
 
     # 5th convolution layer
-    network = Conv2DLayer(network,
-                          num_filters=512,
-                          filter_size=(3, 3),
-                          pad=1,
-                          flip_filters=False,
-                          name='conv_5')
+    if do_batch_norm:
+        network = batch_norm(Conv2DLayer(network,
+                                         num_filters=512,
+                                         filter_size=(3, 3),
+                                         pad=1,
+                                         flip_filters=False,
+                                         name='conv_5'))
+    else:
+        network = Conv2DLayer(network,
+                              num_filters=512,
+                              filter_size=(3, 3),
+                              pad=1,
+                              flip_filters=False,
+                              name='conv_4')
 
     # 5th pooling layer (max-pooling)
     network = Pool2DLayer(network, pool_size=(2, 2), mode='average_inc_pad', name='pool_5')
