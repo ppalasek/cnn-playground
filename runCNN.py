@@ -47,16 +47,15 @@ def main():
     parser.add_argument("-b", "--batch_size", type=int, default=256, help="set batch size")
     parser.add_argument("-m", "--save_model", action="store_true", help="save model (./trained_models/)")
     parser.add_argument("-r", "--save_results", action="store_true", help="save results (./results/)")
-    parser.add_argument("-i", "--iter", type=int, help="iteration")
-    parser.add_argument("-a", "--architecture",
-                        type=str,
+    parser.add_argument("-i", "--iter", type=int, default=1, help="iteration")
+    parser.add_argument("-a", "--architecture", type=str,
                         choices=['ccfff-ap',
                                  'ccfff-mp',
                                  'ccffsvm-ap',
                                  'ccffsvm-mp',
                                  'vgg5',
                                  'vgg16'],
-                        default="ccfff-mp-d",
+                        default="ccffsvm-mp",
                         help="choose CNN architecture")
     args = parser.parse_args()
 
@@ -79,7 +78,7 @@ def main():
         target_var = T.ivector('targets')
 
     elif args.dataset == "cifar10":
-        # Load dataset
+        # Load CIFAR-10 dataset
         X_train, y_train, X_val, y_val, X_test, y_test = load_cifar10()
         data_shape = (None, 3, 32, 32)
         # Prepare Theano variables for inputs and targets
@@ -87,14 +86,18 @@ def main():
         target_var = T.ivector('targets')
 
     elif args.dataset == "cifar100":
+        # TODO: Load CIFAR-100 dataset
+        # TODO: Prepare Theano variables for inputs and targets
         raise NotImplementedError
 
     elif args.dataset == "svhn":
+        # TODO: SVHN dataset
+        # TODO: Prepare Theano variables for inputs and targets
         raise NotImplementedError
     print("Done!")
 
     # Build the CNN model
-    print(" # Building cnn model and compiling functions...", end="")
+    print(" # Building network model and compiling functions...", end="")
     sys.stdout.flush()
 
     # --------------------
@@ -131,8 +134,9 @@ def main():
         raise NotImplementedError
 
     #
-    # So Far...
+    # So Far, So Good
     #
+
     # Create a loss expression for training
     if ("ccfff" in args.architecture) or (args.architecture == 'vgg16'):
         prediction = lasagne.layers.get_output(network)
@@ -150,12 +154,17 @@ def main():
 
     # Create update expressions for training
     # Stochastic Gradient Descent (SGD) with momentum
-    params = lasagne.layers.get_all_params(network, trainable=True)
-    if "ccffsvm" in args.architecture:
-        lr = 0.01
-    else:
-        lr = 0.1
+    LRs = {'ccfff-ap': {1: 0.1},
+           'ccfff-mp': {1: 0.1},
+           'ccffsvm-ap': {1: 0.01},
+           'ccffsvm-mp': {1: 0.01},
+           'vgg5': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
+           'vgg16': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008}}
+    curr_lrs = LRs[args.architecture]
+    # Get learning rate for the 1st epoch
+    lr = curr_lrs[1]
     sh_lr = theano.shared(lasagne.utils.floatX(lr))
+    params = lasagne.layers.get_all_params(network, trainable=True)
     updates = lasagne.updates.momentum(loss, params, learning_rate=sh_lr, momentum=0.9)
 
     # Compile a function performing a training step on a mini-batch (by giving
@@ -213,12 +222,17 @@ def main():
             os.remove(test_results_filename)
 
     # Start training
-    print(" # Starting training...", end="")
-    sys.stdout.flush()
-    # We iterate over epochs:
+    print(" # Starting training...")
+
+    # Iterate over epochs:
     for epoch in range(args.num_epochs):
 
-        # In each epoch, we do a full pass over the training data:
+        # Set learning rate
+        if epoch in curr_lrs:
+            new_lr = curr_lrs[epoch]
+            sh_lr.set_value(lasagne.utils.floatX(new_lr))
+
+        # In each epoch, do a full pass over the training data:
         train_err = 0
         train_batches = 0
         start_time = time.time()
@@ -227,7 +241,7 @@ def main():
             train_err += train_fn(inputs, targets)
             train_batches += 1
 
-        # And a full pass over the validation data:
+        # ...and a full pass over the validation data:
         val_err = 0
         val_acc = 0
         val_batches = 0
@@ -238,7 +252,7 @@ def main():
             val_acc += acc
             val_batches += 1
 
-        # Then we print the results for this epoch:
+        # Print the results for this epoch:
         if args.verbose:
             print("Epoch {} of {} took {:.3f}s".format(
                 epoch + 1, args.num_epochs, time.time() - start_time))
@@ -247,17 +261,11 @@ def main():
             print("  validation accuracy:\t\t{:.2f} %".format(
                 val_acc / val_batches * 100))
 
-        with open(valid_results_filename, "a") as valid_results_fid:
-            valid_results_fid.write("%.6f %.6f %.6f\n" % (train_err / train_batches,
-                                                          val_err / val_batches,
-                                                          val_acc / val_batches * 100))
-
-        # # Adjust learning rate (after 41 and 61 epochs)
-        # if (epoch + 1) == 41 or (epoch + 1) == 61:
-        #     new_lr = sh_lr.get_value() * 0.1
-        #     if args.verbose:
-        #         print("New LR:" + str(new_lr))
-        #     sh_lr.set_value(lasagne.utils.floatX(new_lr))
+        if args.save_results:
+            with open(valid_results_filename, "a") as valid_results_fid:
+                valid_results_fid.write("%.6f %.6f %.6f\n" % (train_err / train_batches,
+                                                              val_err / val_batches,
+                                                              val_acc / val_batches * 100))
 
     # Save trained model
     if args.save_model:
@@ -289,9 +297,10 @@ def main():
     print("   test loss:\t\t\t{:.6f}".format(test_err / test_batches))
     print("   test accuracy:\t\t{:.2f} %".format(test_acc / test_batches * 100))
 
-    with open(test_results_filename, "w") as test_results_fid:
-        test_results_fid.write("%.6f %.6f\n" % (test_err / test_batches,
-                                                test_acc / test_batches * 100))
+    if args.save_results:
+        with open(test_results_filename, "w") as test_results_fid:
+            test_results_fid.write("%.6f %.6f\n" % (test_err / test_batches,
+                                                    test_acc / test_batches * 100))
 
 
 if __name__ == "__main__":
