@@ -55,7 +55,8 @@ def main():
                                  'ccffsvm-mp',
                                  'vgg5',
                                  'vgg5-bn',
-                                 'vgg16'],
+                                 'vgg5-svm',
+                                 'vgg5-bn-svm'],
                         default="ccffsvm-mp",
                         help="choose CNN architecture")
     args = parser.parse_args()
