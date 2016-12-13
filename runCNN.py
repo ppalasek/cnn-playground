@@ -54,6 +54,7 @@ def main():
                                  'ccffsvm-ap',
                                  'ccffsvm-mp',
                                  'vgg5',
+                                 'vgg5-bn',
                                  'vgg16'],
                         default="ccffsvm-mp",
                         help="choose CNN architecture")
@@ -125,7 +126,10 @@ def main():
         network = build_vgg5(input_var=input_var, data_shape=data_shape)
 
     elif args.architecture == "vgg16":
-        network = build_vgg16(input_var=input_var, data_shape=data_shape)
+        network = build_vgg16(input_var=input_var, data_shape=data_shape, do_batch_norm=False)
+
+    elif args.architecture == "vgg16-bn":
+        network = build_vgg16(input_var=input_var, data_shape=data_shape, do_batch_norm=True)
 
     # -----------------------------------
     # Architectures: To be added more ...
@@ -230,6 +234,8 @@ def main():
         if epoch in curr_lrs:
             new_lr = curr_lrs[epoch]
             sh_lr.set_value(lasagne.utils.floatX(new_lr))
+            if args.verbose:
+                print(" # New LR: %f" % sh_lr.get_value())
 
         # In each epoch, do a full pass over the training data:
         train_err = 0
