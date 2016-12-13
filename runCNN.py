@@ -123,12 +123,9 @@ def main():
     # Architectures: VGG-like
     # -----------------------
     elif args.architecture == "vgg5":
-        network = build_vgg5(input_var=input_var, data_shape=data_shape)
-
-    elif args.architecture == "vgg16":
         network = build_vgg16(input_var=input_var, data_shape=data_shape, do_batch_norm=False)
 
-    elif args.architecture == "vgg16-bn":
+    elif args.architecture == "vgg5-bn":
         network = build_vgg16(input_var=input_var, data_shape=data_shape, do_batch_norm=True)
 
     # -----------------------------------
