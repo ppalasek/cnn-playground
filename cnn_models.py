@@ -6,7 +6,7 @@ from lasagne.layers import InputLayer, Conv2DLayer, Pool2DLayer, DenseLayer, dro
 from layers import SVMlayer as SVMLayer
 
 
-def build_ccfff_model(input_var=None, data_shape=None, pool_mode='max', use_dropout=False):
+def build_ccfff_model(input_var=None, data_shape=None, pool_mode='average_inc_pad', use_dropout=False):
     """
     ---------------------
     Architecture: "CCFFF"
@@ -76,7 +76,7 @@ def build_ccfff_model(input_var=None, data_shape=None, pool_mode='max', use_drop
     return network
 
 
-def build_ccffsvm_model(input_var=None, data_shape=None, pool_mode='max', use_dropout=False):
+def build_ccffsvm_model(input_var=None, data_shape=None, pool_mode='average_inc_pad', use_dropout=False):
     """
     -----------------------
     Architecture: "CCFFSVM"
