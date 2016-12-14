@@ -75,6 +75,6 @@ class SVMlayer(lasagne.layers.Layer):
 
         cost =  T.maximum(0, 1 - y_i * scores) ** 2
         final_cost = cost.mean(axis=0).sum()
-        final_cost += 0.5 * lambda_coef * (T.sum(self._coef ** 2) + T.sum(self._intercept ** 2))
+        final_cost += 0.5 * lambda_coef * T.sum(self._coef ** 2)
 
         return final_cost
