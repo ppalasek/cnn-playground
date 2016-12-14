@@ -50,9 +50,7 @@ def main():
     parser.add_argument("-i", "--iter", type=int, default=1, help="iteration")
     parser.add_argument("-a", "--architecture", type=str,
                         choices=['ccfff-ap',
-                                 'ccfff-mp',
                                  'ccffsvm-ap',
-                                 'ccffsvm-mp',
                                  'vgg5',
                                  'vgg5-bn',
                                  'vgg5-svm',
@@ -102,23 +100,14 @@ def main():
     print(" # Building network model and compiling functions...", end="")
     sys.stdout.flush()
 
-    # --------------------
-    # Architectures: CCFFF
-    # --------------------
+    # --------------------------
+    # Architectures: CCFF{F,SVM}
+    # --------------------------
     if args.architecture == 'ccfff-ap':
-        network = build_ccfff_model(input_var=input_var, data_shape=data_shape, pool_mode='average_inc_pad')
+        network = build_ccfff_model(input_var=input_var, data_shape=data_shape)
 
-    elif args.architecture == 'ccfff-mp':
-        network = build_ccfff_model(input_var=input_var, data_shape=data_shape, pool_mode='max')
-
-    # ----------------------
-    # Architectures: CCFFSVM
-    # ----------------------
     elif args.architecture == 'ccffsvm-ap':
-        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape, pool_mode='average_inc_pad')
-
-    elif args.architecture == 'ccffsvm-mp':
-        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape, pool_mode='max')
+        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape)
 
     # -----------------------
     # Architectures: VGG-like
@@ -161,14 +150,12 @@ def main():
 
     # Create update expressions for training
     # Stochastic Gradient Descent (SGD) with momentum
-    LRs = {'ccfff-ap': {1: 0.1},
-           'ccfff-mp': {1: 0.1},
-           'ccffsvm-ap': {1: 0.01},
-           'ccffsvm-mp': {1: 0.01},
+    LRs = {'ccfff-ap': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
+           'ccffsvm-ap': {1: 0.01, 60: 0.002, 120: 0.0004, 160: 0.00008},
            'vgg5': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
            'vgg5-bn': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
-           'vgg5-svm': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
-           'vgg5-bn-svm': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008}}
+           'vgg5-svm': {1: 0.01, 60: 0.002, 120: 0.0004, 160: 0.00008},
+           'vgg5-bn-svm': {1: 0.01, 60: 0.002, 120: 0.0004, 160: 0.00008}}
     curr_lrs = LRs[args.architecture]
     # Get learning rate for the 1st epoch
     lr = curr_lrs[1]
@@ -212,7 +199,7 @@ def main():
 
         # Create results file for validation loss and accuracy (over epochs)
         # Filename format:
-        # <dataset>_<architecture>_<num_epochs>_<batch_size>_valid.results
+        # <dataset>_<architecture>_<num_epochs>_<batch_size>_valid_<iter>.results
         valid_results_filename = "%s/%s_%s_%d_%d_valid_%d.results" % \
                                  (results_dir, args.dataset,
                                   args.architecture, args.num_epochs,
@@ -222,7 +209,7 @@ def main():
 
         # Create results file for test loss and accuracy
         # Filename format:
-        # <dataset>_<architecture>_<num_epochs>_<batch_size>_test.results
+        # <dataset>_<architecture>_<num_epochs>_<batch_size>_test_<iter>.results
         test_results_filename = "%s/%s_%s_%d_%d_test_%d.results" % \
                                 (results_dir, args.dataset,
                                  args.architecture, args.num_epochs,
