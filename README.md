@@ -6,6 +6,7 @@ A framework for training/testing a Convolutional Neural Network (CNN) using Thea
 
  - Theano & Lasagne (Prefer the [bleeding-edge versions](http://lasagne.readthedocs.io/en/latest/user/installation.html#bleeding-edge-version))
  - Install the latest CUDA Toolkit and possibly the corresponding driver available from NVIDIA: https://developer.nvidia.com/cuda-downloads
+ 
 
 To configure Theano to *use the GPU by default*, create a file `.theanorc` directly in your home directory, with the following contents:
 ~~~
@@ -28,11 +29,12 @@ This framework supports the following **datasets**:
 
 and a set of basic **architectures** for training and evaluating a CNN. More specifically, the following architectures are available:
 
-
- - **`'ccfff'`**: A simple architecture consisting of 2 convolution and 3 fully-connected layers (see `build_ccfff_model()` in `cnn_models.py` for more details)
- - **`'ccffsvm'`**: 
- - *More to be added.*
-
+ - **`'ccfff-ap'`**
+ - **`'ccffsvm-ap'`**
+ - **`'vgg5'`**
+ - **`'vgg5-bn'`**
+ - **`'vgg5-svm'`**
+ - **`'vgg5-bn-svm'`**
 
 
 #### Step 1: Get the datasets
@@ -55,10 +57,10 @@ First, you need to populate the `./data/` directory as follows:
 		│   ├── test
 		│   └── train
 		├── mnist
-		│   ├── t10k-images-idx3-ubyte
-		│   ├── t10k-labels-idx1-ubyte
-		│   ├── train-images-idx3-ubyte
-		│   └── train-labels-idx1-ubyte
+		│   ├── t10k-images-idx3-ubyte.gz
+		│   ├── t10k-labels-idx1-ubyte.gz
+		│   ├── train-images-idx3-ubyte.gz
+		│   └── train-labels-idx1-ubyte.gz
 		└── svhn
 		    ├── test_32x32.mat
 		    └── train_32x32.mat
@@ -80,7 +82,7 @@ Arguments:
 	-h, --help : show help message
 	-v, --verbose : increase output verbosity
 	-d, --dataset : choose dataset from {'mnist', 'cifar10', 'cifar100', 'svhn'} (default: 'cifar10')
-	-a, --architecture : choose architecture from {'ccfff'} (default: 'ccfff')
+	-a, --architecture : choose architecture from {'ccfff-ap', 'ccffsvm-ap', 'vgg5', 'vgg5-bn', 'vgg5-svm', 'vgg5-bn-svm'} (default: 'ccffsvm-ap')
 	-e, --num_epochs : set number of epochs
 	-b, --batch_size : set batch size
 	-s, --save_model : save model file
