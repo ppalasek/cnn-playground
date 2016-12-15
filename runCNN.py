@@ -9,7 +9,7 @@ import theano.tensor as T
 import lasagne
 from aux import iterate_minibatches
 from read_data import load_mnist, load_cifar10, load_cifar100, load_svhn
-from cnn_models import build_ccfff_model, build_ccffsvm_model, build_vgg5, build_vgg5_svm
+from cnn_models import build_ccfff, build_ccffsvm, build_vgg5, build_vgg5_svm
 
 
 def main():
@@ -104,10 +104,10 @@ def main():
     # Architectures: CCFF{F,SVM}
     # --------------------------
     if args.architecture == 'ccfff-ap':
-        network = build_ccfff_model(input_var=input_var, data_shape=data_shape)
+        network = build_ccfff(input_var=input_var, data_shape=data_shape)
 
     elif args.architecture == 'ccffsvm-ap':
-        network = build_ccffsvm_model(input_var=input_var, data_shape=data_shape)
+        network = build_ccffsvm(input_var=input_var, data_shape=data_shape)
 
     # -----------------------
     # Architectures: VGG-like
