@@ -76,6 +76,7 @@ def main():
         # Prepare Theano variables for inputs and targets
         input_var = T.tensor4('inputs')
         target_var = T.ivector('targets')
+        num_classes = 10
 
     elif args.dataset == "cifar10":
         # Load CIFAR-10 dataset
@@ -84,6 +85,7 @@ def main():
         # Prepare Theano variables for inputs and targets
         input_var = T.tensor4('inputs')
         target_var = T.ivector('targets')
+        num_classes = 10
 
     elif args.dataset == "cifar100":
         # TODO: Load CIFAR-100 dataset
@@ -104,35 +106,31 @@ def main():
     # Architectures: CCFF{F,SVM}
     # --------------------------
     if args.architecture == 'ccfff-ap':
-        network = build_ccfff(input_var=input_var, data_shape=data_shape)
+        network = build_ccfff(input_var=input_var, data_shape=data_shape, num_classes=num_classes)
 
     elif args.architecture == 'ccffsvm-ap':
-        network = build_ccffsvm(input_var=input_var, data_shape=data_shape)
+        network = build_ccffsvm(input_var=input_var, data_shape=data_shape, num_classes=num_classes)
 
     # -----------------------
     # Architectures: VGG-like
     # -----------------------
     elif args.architecture == "vgg5":
-        network = build_vgg5(input_var=input_var, data_shape=data_shape, do_batch_norm=False)
+        network = build_vgg5(input_var=input_var, data_shape=data_shape, num_classes=num_classes, do_batch_norm=False)
 
     elif args.architecture == "vgg5-bn":
-        network = build_vgg5(input_var=input_var, data_shape=data_shape, do_batch_norm=True)
+        network = build_vgg5(input_var=input_var, data_shape=data_shape, num_classes=num_classes, do_batch_norm=True)
 
     elif args.architecture == "vgg5-svm":
-        network = build_vgg5_svm(input_var=input_var, data_shape=data_shape, do_batch_norm=False)
+        network = build_vgg5_svm(input_var=input_var, data_shape=data_shape, num_classes=num_classes, do_batch_norm=False)
 
     elif args.architecture == "vgg5-bn-svm":
-        network = build_vgg5_svm(input_var=input_var, data_shape=data_shape, do_batch_norm=True)
+        network = build_vgg5_svm(input_var=input_var, data_shape=data_shape, num_classes=num_classes, do_batch_norm=True)
 
     # -----------------------------------
     # Architectures: To be added more ...
     # -----------------------------------
     elif args.architecture == "":
         raise NotImplementedError
-
-    #
-    # So Far, So Good
-    #
 
     # Create a loss expression for training
     if "svm" in args.architecture:
@@ -142,6 +140,10 @@ def main():
         prediction = lasagne.layers.get_output(network)
         loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
     loss = loss.mean()
+
+    #
+    # So Far, So Good
+    #
 
     # Add weight decay
     all_layers = lasagne.layers.get_all_layers(network)

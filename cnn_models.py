@@ -6,7 +6,7 @@ from lasagne.layers import InputLayer, Conv2DLayer, Pool2DLayer, DenseLayer, dro
 from layers import SVMlayer as SVMLayer
 
 
-def build_ccfff(input_var=None, data_shape=None, pool_mode='average_inc_pad', use_dropout=False):
+def build_ccfff(input_var=None, data_shape=None, num_classes=None, pool_mode='average_inc_pad', use_dropout=False):
     """
     ---------------------
     Architecture: "CCFFF"
@@ -69,14 +69,14 @@ def build_ccfff(input_var=None, data_shape=None, pool_mode='average_inc_pad', us
 
     # Output layer
     network = DenseLayer(network,
-                         num_units=10,
+                         num_units=num_classes,
                          nonlinearity=softmax,
                          name='output')
 
     return network
 
 
-def build_ccffsvm(input_var=None, data_shape=None, pool_mode='average_inc_pad', use_dropout=False):
+def build_ccffsvm(input_var=None, data_shape=None, num_classes=None, pool_mode='average_inc_pad', use_dropout=False):
     """
     -----------------------
     Architecture: "CCFFSVM"
@@ -140,7 +140,7 @@ def build_ccffsvm(input_var=None, data_shape=None, pool_mode='average_inc_pad', 
     # Output layer
     network = SVMLayer(network,
                        return_scores=True,
-                       num_classes=10,
+                       num_classes=num_classes,
                        sample_dim=256,
                        trainable_C=True,
                        C=15,
@@ -149,7 +149,7 @@ def build_ccffsvm(input_var=None, data_shape=None, pool_mode='average_inc_pad', 
     return network
 
 
-def build_vgg5(input_var=None, data_shape=None, do_batch_norm=False):
+def build_vgg5(input_var=None, data_shape=None, num_classes=None, do_batch_norm=False):
     """
 
     """
@@ -252,14 +252,14 @@ def build_vgg5(input_var=None, data_shape=None, do_batch_norm=False):
 
     # Fully-connected layer with 10 units
     network = DenseLayer(incoming=network,
-                         num_units=10,
+                         num_units=num_classes,
                          nonlinearity=softmax,
                          name='output')
 
     return network
 
 
-def build_vgg5_svm(input_var=None, data_shape=None, do_batch_norm=False):
+def build_vgg5_svm(input_var=None, data_shape=None, num_classes=None, do_batch_norm=False):
     """
 
     """
@@ -369,7 +369,7 @@ def build_vgg5_svm(input_var=None, data_shape=None, do_batch_norm=False):
     # Output layer
     network = SVMLayer(network,
                        return_scores=True,
-                       num_classes=10,
+                       num_classes=num_classes,
                        sample_dim=256,
                        trainable_C=True,
                        C=15,
