@@ -3,7 +3,7 @@ from lasagne.nonlinearities import rectify as relu
 from lasagne.nonlinearities import softmax, sigmoid, softplus
 from lasagne.layers import InputLayer, Conv2DLayer, Pool2DLayer, DenseLayer, dropout, GaussianNoiseLayer, batch_norm
 
-from layers import SVMlayer as SVMLayer
+from libuacnn import SVMlayer as SVMLayer
 
 
 def build_ccfff(input_var=None, data_shape=None, num_classes=None, pool_mode='average_inc_pad', use_dropout=False):
