@@ -3,7 +3,7 @@ from lasagne.nonlinearities import rectify as relu
 from lasagne.nonlinearities import softmax, sigmoid, softplus
 from lasagne.layers import InputLayer, Conv2DLayer, Pool2DLayer, DenseLayer, dropout, GaussianNoiseLayer, batch_norm
 
-from libuacnn import SVMlayer as SVMLayer
+from libuacnn import SVMLayer, SVMGSULayer
 from libuacnn import addUAInputLayerEst, addUA2DConvLayer, addUAPool2DLayer, addUADenseLayer
 
 
@@ -382,7 +382,7 @@ def build_vgg5_svm(input_var=None, data_shape=None, num_classes=None, do_batch_n
 # ==========================
 # Work in the testing branch
 # ==========================
-def build_ccfff_ua(input_var=None, data_shape=None, num_classes=None, pool_mode='average_inc_pad'):
+def build_ccffsvmgsu(input_var=None, data_shape=None, num_classes=None, pool_mode='average_inc_pad'):
 
     # UA input layer
     network_mean, network_var = addUAInputLayerEst(shape=data_shape, input_var=input_var, k_0=3)
@@ -428,10 +428,12 @@ def build_ccfff_ua(input_var=None, data_shape=None, num_classes=None, pool_mode=
                                                 name='ua_fc_2')
 
     # Output layer
-    network_mean, network_var = addUADenseLayer(network_mean,
-                                                network_var,
-                                                num_units=num_classes,
-                                                nonlinearity=relu,
-                                                name='output')
+    network = SVMLayer(network_mean,
+                       return_scores=True,
+                       num_classes=num_classes,
+                       sample_dim=256,
+                       trainable_C=True,
+                       C=15,
+                       name='svm')
 
-    return network_mean, network_var
+    return network
