@@ -376,3 +376,11 @@ def build_vgg5_svm(input_var=None, data_shape=None, num_classes=None, do_batch_n
                        name='svm')
 
     return network
+
+
+#
+# Work in the testing branch
+#
+def build_ccfff_ua(input_var=None, data_shape=None, num_classes=None, pool_mode='average_inc_pad', use_dropout=False):
+    raise NotADirectoryError
+
