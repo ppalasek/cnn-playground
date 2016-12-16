@@ -20,13 +20,9 @@ def addUAInputLayerEst(shape=None, input_var=None, k_0=3):
 
     return input_layer, input_layer_var
 
-def addUA2DConvLayer(input_layer_mean,
-                     input_layer_var,
-                     num_filters,
-                     filter_size,
-                     stride=(1, 1),
-                     pad=0,
-                     name='uaconv'):
+
+def addUA2DConvLayer(input_layer_mean, input_layer_var,
+                     num_filters, filter_size, stride=(1, 1), pad=0):
     """
     """
 
@@ -94,15 +90,15 @@ def addUAPool2DLayer(input_layer_mean, input_layer_var, pool_size, stride=None, 
     return pooled_layer_mean, pooled_layer_var
 
 
-def addUADenseLayer(input_layer_mean,
-                    input_layer_var,
+def addUADenseLayer(input_layer_mean, input_layer_var,
                     num_units,
                     W=lasagne.init.GlorotUniform(),
                     b=lasagne.init.Constant(0.),
                     nonlinearity=None,
                     num_leading_axes=1,
                     **kwargs):
-
+    """
+    """
     # this is going on in the DenseLayer
     # out = T.dot(input, self.W)
     # and later the bias is added if it's not None
@@ -262,11 +258,6 @@ class MyInverseLayer(MergeLayer):
         return theano.grad(None, wrt=layer_in, known_grads={layer_out: input})
 
 
-################################################################################
-##                                                                            ##
-##                                  Mean Map                                  ##
-##                                                                            ##
-################################################################################
 class MeanMap(Layer):
     def __init__(self, incoming, k_0=3, **kwargs):
         super(MeanMap, self).__init__(incoming, **kwargs)
@@ -303,11 +294,6 @@ class MeanMap(Layer):
         return mean_map
 
 
-################################################################################
-##                                                                            ##
-##                                Variance Map                                ##
-##                                                                            ##
-################################################################################
 class VarianceMap(MergeLayer):
     def __init__(self, incomings, k_0=3, **kwargs):
         super(VarianceMap, self).__init__(incomings, **kwargs)
@@ -334,11 +320,6 @@ class VarianceMap(MergeLayer):
         return input_layer_var
 
 
-################################################################################
-##                                                                            ##
-##                           Compute output mean                              ##
-##                                                                            ##
-################################################################################
 class computeMu(lasagne.layers.base.MergeLayer):
     """
     This layer performs an element-wise merge of a pair input layers using \phi (proposed activation)
@@ -376,7 +357,6 @@ class computeMu(lasagne.layers.base.MergeLayer):
         # t_sigma = T.sqrt(T.maximum(y, 10e-12))  # use the bigger between 10e-6 and x
         t_sigma = T.sqrt(T.switch(T.eq(inputs[1], 0), 10e-12, inputs[1]))
 
-
         rho = t_mu / t_sigma
         erfc = T.erfc(-(1.0 / T.sqrt(2.0)) * rho)
         exp = T.exp(-0.5 * T.sqr(rho))
@@ -386,11 +366,6 @@ class computeMu(lasagne.layers.base.MergeLayer):
         return output
 
 
-################################################################################
-##                                                                            ##
-##                         Compute output variance                            ##
-##                                                                            ##
-################################################################################
 class computeSigma2(lasagne.layers.base.MergeLayer):
     """
     This layer performs an element-wise merge of a pair input layers using \phi (proposed activation)
@@ -433,11 +408,6 @@ class computeSigma2(lasagne.layers.base.MergeLayer):
         exp = T.exp(-0.5 * T.sqr(rho))
 
         return 0.5 * (T.sqr(t_mu) + T.sqr(t_sigma)) * erfc + T.sqrt(1.0 / (2.0 * np.pi)) * t_mu * t_sigma * exp
-
-
-
-
-
 
 
 class RandomLayer(InputLayer):
@@ -507,14 +477,12 @@ def addUAInputLayerRnd(shape=None, input_var=None, batch_size=None):
 
 
 
-
-
 #
 # ==
 # ==
 #
 
-class SVMlayer(lasagne.layers.Layer):
+class SVMLayer(lasagne.layers.Layer):
     def __init__(self,
                  incoming,
                  coef=lasagne.init.Normal(0.1),
@@ -526,7 +494,7 @@ class SVMlayer(lasagne.layers.Layer):
                  sample_dim=None,
                  **kwargs):
 
-        super(SVMlayer, self).__init__(incoming, **kwargs)
+        super(SVMLayer, self).__init__(incoming, **kwargs)
 
         assert (coef is not None)
         assert (intercept is not None)
@@ -587,3 +555,112 @@ class SVMlayer(lasagne.layers.Layer):
         final_cost += 0.5 * lambda_coef * T.sum(self._coef ** 2)
 
         return final_cost
+
+
+class SVMGSULayer(lasagne.layers.MergeLayer):
+    """
+    This layer implements the SVM-GSU layer.
+    Parameters
+    ----------
+    incomings : a list of :class:`Layer` instances
+                First input layer are the means, the second layer are the variances
+    """
+
+    def __init__(self,
+                 incomings,
+                 w=lasagne.init.Normal(0.1),
+                 b=lasagne.init.Normal(0.1),
+                 C=15,
+                 trainable_C=True,
+                 return_cost=False,
+                 targets=None,
+                 num_classes=None,
+                 sample_dim=None,
+                 **kwargs):
+
+        super(SVMGSULayer, self).__init__(incomings, **kwargs)
+
+        assert (w is not None)
+        assert (b is not None)
+        assert (num_classes is not None)
+        assert (sample_dim is not None)
+
+        self.num_classes = num_classes
+        self.sample_dim = sample_dim
+
+        self.classes = theano.shared(np.arange(num_classes).astype('int'))
+
+        self.w = self.add_param(w, (self.num_classes, self.sample_dim), name='svm-gsu_w', regularizable=False)
+        self.b = self.add_param(b, (self.num_classes,), name='svm-gsu_b', regularizable=False)
+        self.C = self.add_param(lasagne.init.Constant(C), (), name='svm-gsu_C', regularizable=False, trainable=trainable_C)
+
+        self.return_cost = return_cost
+
+        self.targets = targets
+
+        if (return_cost):
+            assert(self.targets is not None)
+
+    def get_output_shape_for(self, input_shapes):
+        if (self.return_cost):
+            # input_shapes[0] is the minibatch size of the input
+            return (,)
+        else:
+            return (input_shapes[0][0],)
+
+    def get_output_for(self, inputs, **kwargs):
+        if (self.return_cost):
+            # the inputs are means, variances
+            return self.get_cost(inputs[0], inputs[1], self.targets)
+        else:
+            return self.classify(inputs[0], inputs[1])
+
+
+    def get_cost(self, means, variances, targets):
+        # THIS IS NOT TESTED YET!
+
+        # target one hot encoded and in {-1, 1}
+        t = T.extra_ops.to_one_hot(targets, self.num_classes) * 2
+        t -= 1
+
+        # dim of t is [minibatch size, 1]
+
+        # dim of means is [minibatch size, self.sample_dim]
+        # dim of self.w [self.num_classes, self.sample_dim]
+
+        # dim of T.dot(means, self.w.T) is [minibatch size, self.num_classes]
+
+        # dim of self.b is [self.num_classes,]
+
+        # dim of d_mu is [minibatch size, self.num_classes]
+        d_mu = t - T.dot(means, self.w.T) - self.b
+
+        # adding SQRT_EPS to avoid problems with the derivative of sqrt(x) when
+        # x is very small. instead of sqrt(x) we use sqrt(max(x, eps))
+        # dim of d_sigma is [minibatch size, self.num_classes]
+        d_sigma = T.sqrt(T.maximum(T.dot(variances, self.w.T ** 2)), SQRT_EPS)
+
+        # first part of Equation 5
+        erf = 0.5 * d_mu * (T.erf((T.sqrt(2) / 2) * d_mu / d_sigma) + t)
+
+        # second part of Equation 5
+        # dim of exp is [minibatch_size, self.num_classes]
+        exp = (d_sigma / (T.sqrt(2 * np.pi))) * T.exp(-0.5 * (d_mu / d_sigma) ** 2)
+
+        # regularization
+        num_samples = T.cast(target.shape[0], 'float32')
+        lambda_coef = 1. / (num_samples * self.C)
+
+        reg = 0.5 * lambda_coef * T.sum(self.w ** 2)
+
+        cost = reg + (erf + exp).mean(axis=0).sum()
+
+        return cost
+
+    def classify(self, means, variances):
+        # TODO
+        scores = T.dot(means, self.w.T) + self.b
+
+        indices = scores.argmax(axis=1)
+
+        return self.classes[indices]
