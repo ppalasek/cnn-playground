@@ -9,7 +9,7 @@ import theano.tensor as T
 import lasagne
 from aux import iterate_minibatches
 from read_data import load_mnist, load_cifar10, load_cifar100, load_svhn
-from cnn_models import build_ccfff, build_ccffsvm, build_vgg5, build_vgg5_svm
+from cnn_models import build_ccfff, build_ccffsvm, build_vgg5, build_vgg5_svm, build_ccfff_ua
 
 
 def main():
@@ -50,6 +50,7 @@ def main():
     parser.add_argument("-i", "--iter", type=int, default=1, help="iteration")
     parser.add_argument("-a", "--architecture", type=str,
                         choices=['ccfff-ap',
+                                 'ccfff-ap-ua',
                                  'ccffsvm-ap',
                                  'vgg5',
                                  'vgg5-bn',
@@ -108,6 +109,9 @@ def main():
     if args.architecture == 'ccfff-ap':
         network = build_ccfff(input_var=input_var, data_shape=data_shape, num_classes=num_classes)
 
+    elif args.architecture == 'ccfff - ap - ua':
+        network = build_ccfff_ua(input_var=input_var, data_shape=data_shape, num_classes=num_classes)
+
     elif args.architecture == 'ccffsvm-ap':
         network = build_ccffsvm(input_var=input_var, data_shape=data_shape, num_classes=num_classes)
 
@@ -153,6 +157,7 @@ def main():
     # Create update expressions for training
     # Stochastic Gradient Descent (SGD) with momentum
     LRs = {'ccfff-ap': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
+           'ccfff-ap-ua': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
            'ccffsvm-ap': {1: 0.01, 60: 0.002, 120: 0.0004, 160: 0.00008},
            'vgg5': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
            'vgg5-bn': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
