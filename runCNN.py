@@ -109,7 +109,7 @@ def main():
     if args.architecture == 'ccfff-ap':
         network = build_ccfff(input_var=input_var, data_shape=data_shape, num_classes=num_classes)
 
-    elif args.architecture == 'ccfff - ap - ua':
+    elif args.architecture == 'ccfff-ap-ua':
         network = build_ccfff_ua(input_var=input_var, data_shape=data_shape, num_classes=num_classes)
 
     elif args.architecture == 'ccffsvm-ap':
