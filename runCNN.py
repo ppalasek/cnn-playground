@@ -9,7 +9,7 @@ import theano.tensor as T
 import lasagne
 from aux import iterate_minibatches
 from read_data import load_mnist, load_cifar10, load_cifar100, load_svhn
-from cnn_models import build_ccfff, build_ccffsvm, build_vgg5, build_vgg5_svm, build_ccffsvmgsu
+from cnn_models import build_ccfff, build_ccffsvm, build_vgg5, build_vgg5_svm, build_ccffsvmgsu, build_ccffsvmgsu_testing
 
 
 def main():
@@ -50,7 +50,8 @@ def main():
     parser.add_argument("-i", "--iter", type=int, default=1, help="iteration")
     parser.add_argument("-a", "--architecture", type=str,
                         choices=['ccfff-ap',
-                                 'ccffsvmgsu-ap',
+                                 'ccffsvm-ua',
+                                 'ccffsvm-ua-test',
                                  'ccffsvm-ap',
                                  'vgg5',
                                  'vgg5-bn',
@@ -73,7 +74,7 @@ def main():
     if args.dataset == "mnist":
         # Load MNIST dataset
         X_train, y_train, X_val, y_val, X_test, y_test = load_mnist()
-        data_shape = (None, 1, 28, 28)
+        data_shape = (args.batch_size, 1, 28, 28)
         # Prepare Theano variables for inputs and targets
         input_var = T.tensor4('inputs')
         target_var = T.ivector('targets')
@@ -82,7 +83,7 @@ def main():
     elif args.dataset == "cifar10":
         # Load CIFAR-10 dataset
         X_train, y_train, X_val, y_val, X_test, y_test = load_cifar10()
-        data_shape = (None, 3, 32, 32)
+        data_shape = (args.batch_size, 3, 32, 32)
         # Prepare Theano variables for inputs and targets
         input_var = T.tensor4('inputs')
         target_var = T.ivector('targets')
@@ -103,6 +104,9 @@ def main():
     print(" # Building network model and compiling functions...", end="")
     sys.stdout.flush()
 
+    # the layer/s feeding into the SVM layer, if there is one
+    svm_input = None
+
     # --------------------------
     # Architectures: CCFF{F,SVM}
     # --------------------------
@@ -111,15 +115,21 @@ def main():
                               data_shape=data_shape,
                               num_classes=num_classes)
 
-    elif args.architecture == 'ccfff-ap-ua':
-        network = build_ccffsvmgsu(input_var=input_var,
-                                   data_shape=data_shape,
-                                   num_classes=num_classes)
+    elif args.architecture == 'ccffsvm-ua':
+        network, svm_input = build_ccffsvmgsu(input_var=input_var,
+                                              data_shape=data_shape,
+                                              num_classes=num_classes)
 
     elif args.architecture == 'ccffsvm-ap':
-        network = build_ccffsvm(input_var=input_var,
-                                data_shape=data_shape,
-                                num_classes=num_classes)
+        network, svm_input = build_ccffsvm(input_var=input_var,
+                                           data_shape=data_shape,
+                                           num_classes=num_classes)
+
+    elif args.architecture == 'ccffsvm-ua-test':
+        # with variances set to a small number
+        network, svm_input = build_ccffsvmgsu_testing(input_var=input_var,
+                                                      data_shape=data_shape,
+                                                      num_classes=num_classes)
 
     # -----------------------
     # Architectures: VGG-like
@@ -137,16 +147,16 @@ def main():
                              do_batch_norm=True)
 
     elif args.architecture == "vgg5-svm":
-        network = build_vgg5_svm(input_var=input_var,
-                                 data_shape=data_shape,
-                                 num_classes=num_classes,
-                                 do_batch_norm=False)
+        network, svm_input = build_vgg5_svm(input_var=input_var,
+                                            data_shape=data_shape,
+                                            num_classes=num_classes,
+                                            do_batch_norm=False)
 
     elif args.architecture == "vgg5-bn-svm":
-        network = build_vgg5_svm(input_var=input_var,
-                                 data_shape=data_shape,
-                                 num_classes=num_classes,
-                                 do_batch_norm=True)
+        network, svm_input = build_vgg5_svm(input_var=input_var,
+                                            data_shape=data_shape,
+                                            num_classes=num_classes,
+                                            do_batch_norm=True)
 
     # -----------------------------------
     # Architectures: To be added more ...
@@ -160,8 +170,23 @@ def main():
 
     # Create a loss expression for training
     if "svm" in args.architecture:
-        scores = lasagne.layers.get_output(network)
-        loss = network.get_one_vs_all_cost_from_scores(scores, target_var)
+        assert(svm_input is not None)
+
+        outputs = lasagne.layers.get_output([network] + svm_input)
+
+        if (len(outputs) == 3):
+            prediction, means, variances = outputs
+            
+            # it means that we have two input to the svm layer, the means and the variances
+            loss = network.get_one_vs_all_cost_given_input_and_target(means,
+                                                                      variances,
+                                                                      target_var)
+        else:
+            prediction, svm_input_var = outputs
+
+            loss = network.get_one_vs_all_cost_given_input_and_target(svm_input_var,
+                                                                      target_var)
+
     else:
         prediction = lasagne.layers.get_output(network)
         loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
@@ -176,6 +201,7 @@ def main():
     # Stochastic Gradient Descent (SGD) with momentum
     LRs = {'ccfff-ap': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
            'ccffsvmgau-ap': {1: 0.01, 60: 0.002, 120: 0.0004, 160: 0.00008},
+           'ccffsvm-ua-test': {1: 0.01, 60: 0.002, 120: 0.0004, 160: 0.00008},
            'ccffsvm-ap': {1: 0.01, 60: 0.002, 120: 0.0004, 160: 0.00008},
            'vgg5': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
            'vgg5-bn': {1: 0.1, 60: 0.02, 120: 0.004, 160: 0.0008},
@@ -194,9 +220,23 @@ def main():
 
     # Create a loss expression for validation/testing
     if "svm" in args.architecture:
-        scores = lasagne.layers.get_output(network, deterministic=True)
-        test_loss = network.get_one_vs_all_cost_from_scores(scores, target_var)
-        test_prediction = network.get_class_from_scores(scores)
+        assert(svm_input is not None)
+
+        outputs = lasagne.layers.get_output([network] + svm_input)
+
+        if (len(outputs) == 3):
+            test_prediction, means, variances = outputs
+            
+            # it means that we have two input to the svm layer, the means and the variances
+            test_loss = network.get_one_vs_all_cost_given_input_and_target(means,
+                                                                      variances,
+                                                                      target_var)
+        else:
+            test_prediction, svm_input_var = outputs
+
+            test_loss = network.get_one_vs_all_cost_given_input_and_target(svm_input_var,
+                                                                      target_var)
+
         test_acc = T.mean(T.eq(test_prediction, target_var),
                           dtype=theano.config.floatX)
 
