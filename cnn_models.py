@@ -4,6 +4,7 @@ from lasagne.nonlinearities import softmax, sigmoid, softplus
 from lasagne.layers import InputLayer, Conv2DLayer, Pool2DLayer, DenseLayer, dropout, GaussianNoiseLayer, batch_norm
 
 from libuacnn import SVMlayer as SVMLayer
+from libuacnn import addUAInputLayerEst, addUA2DConvLayer, addUAPool2DLayer
 
 
 def build_ccfff(input_var=None, data_shape=None, num_classes=None, pool_mode='average_inc_pad', use_dropout=False):
@@ -382,5 +383,65 @@ def build_vgg5_svm(input_var=None, data_shape=None, num_classes=None, do_batch_n
 # Work in the testing branch
 #
 def build_ccfff_ua(input_var=None, data_shape=None, num_classes=None, pool_mode='average_inc_pad', use_dropout=False):
-    raise NotADirectoryError
+
+    # UA input layer
+    network_mean, network_var = addUAInputLayerEst(shape=data_shape, input_var=input_var, k_0=3)
+
+    # 1st UA convolution layer
+    network_mean, network_var = addUA2DConvLayer(network_mean,
+                                                 network_var,
+                                                 num_filters=64,
+                                                 filter_size=(3, 3),
+                                                 name="uaconv_1")
+
+    # 1st UA pooling layer
+    network_mean, network_var = addUAPool2DLayer(network_mean, network_var,
+                                                 pool_size=(2, 2),
+                                                 pool_type=pool_mode,
+                                                 name='uapool_1')
+
+    # 2nd UA convolution layer
+    network_mean, network_var = addUA2DConvLayer(network_mean,
+                                                 network_var,
+                                                 num_filters=128,
+                                                 filter_size=(3, 3),
+                                                 name="uaconv_2")
+    # 2nd pooling layer
+    network_mean, network_var = addUAPool2DLayer(network_mean,
+                                                 network_var,
+                                                 pool_size=(2, 2),
+                                                 pool_type=pool_mode,
+                                                 name='uapool_2')
+
+    # 1st Fully-connected layer
+    if use_dropout:
+        network = DenseLayer(incoming=dropout(network_mean, p=0.5),
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_1')
+    else:
+        network = DenseLayer(network,
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_1')
+
+    # 2nd Fully-connected layer
+    if use_dropout:
+        network = DenseLayer(incoming=dropout(network, p=0.5),
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_2')
+    else:
+        network = DenseLayer(network,
+                             num_units=256,
+                             nonlinearity=relu,
+                             name='fc_2')
+
+    # Output layer
+    network = DenseLayer(network,
+                         num_units=num_classes,
+                         nonlinearity=softmax,
+                         name='output')
+
+    return network
 
