@@ -62,12 +62,12 @@ def addUA2DConvLayer(input_layer_mean,
 
 
 def addUAPool2DLayer(input_layer_mean, input_layer_var, pool_size, stride=None, pad=(0, 0), ignore_border=True,
-                     pool_type='average', mode='average_exc_pad', **kwargs):
+                     pool_type='average', mode='average_inc_pad', **kwargs):
     """
         type = {'max', 'average'}
         mode = {'average_exc_pad', 'average_inc_pad'}
     """
-    if pool_type == 'average':
+    if pool_type == 'average_inc_pad':
         pooled_layer_mean = Pool2DLayer(input_layer_mean,
                                         pool_size,
                                         stride=stride,
